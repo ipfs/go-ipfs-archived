@@ -76,13 +76,6 @@ func (fs *Datastore) makePrefixDir(dir string) error {
 		return err
 	}
 
-	// In theory, if we create a new prefix dir and add a file to
-	// it, the creation of the prefix dir itself might not be
-	// durable yet. Sync the root dir after a successful mkdir of
-	// a prefix dir, just to be paranoid.
-	if err := syncDir(fs.path); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -148,9 +141,6 @@ func (fs *Datastore) doPut(key datastore.Key, val []byte) error {
 	if _, err := tmp.Write(val); err != nil {
 		return err
 	}
-	if err := tmp.Sync(); err != nil {
-		return err
-	}
 	if err := tmp.Close(); err != nil {
 		return err
 	}
@@ -162,14 +152,10 @@ func (fs *Datastore) doPut(key datastore.Key, val []byte) error {
 	}
 	removed = true
 
-	if err := syncDir(dir); err != nil {
-		return err
-	}
 	return nil
 }
 
 func (fs *Datastore) putMany(data map[datastore.Key]interface{}) error {
-	var dirsToSync []string
 	files := make(map[*os.File]string)
 
 	for key, value := range data {
@@ -181,7 +167,6 @@ func (fs *Datastore) putMany(data map[datastore.Key]interface{}) error {
 		if err := fs.makePrefixDirNoSync(dir); err != nil {
 			return err
 		}
-		dirsToSync = append(dirsToSync, dir)
 
 		tmp, err := ioutil.TempFile(dir, "put-")
 		if err != nil {
@@ -213,10 +198,6 @@ func (fs *Datastore) putMany(data map[datastore.Key]interface{}) error {
 	// Now we sync everything
 	// sync and close files
 	for fi, _ := range files {
-		if err := fi.Sync(); err != nil {
-			return err
-		}
-
 		if err := fi.Close(); err != nil {
 			return err
 		}
@@ -233,18 +214,6 @@ func (fs *Datastore) putMany(data map[datastore.Key]interface{}) error {
 
 		// signify removed
 		ops[fi] = 2
-	}
-
-	// now sync the dirs for those files
-	for _, dir := range dirsToSync {
-		if err := syncDir(dir); err != nil {
-			return err
-		}
-	}
-
-	// sync top flatfs dir
-	if err := syncDir(fs.path); err != nil {
-		return err
 	}
 
 	return nil
