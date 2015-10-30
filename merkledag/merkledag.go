@@ -18,7 +18,7 @@ var ErrNotFound = fmt.Errorf("merkledag: not found")
 // DAGService is an IPFS Merkle DAG service.
 type DAGService interface {
 	Add(*Node) (key.Key, error)
-	AddRecursive(*Node) error
+	AddRecursive(*NodeTree) error
 	Get(context.Context, key.Key) (*Node, error)
 	Remove(*Node) error
 
@@ -69,20 +69,18 @@ func (n *dagService) Batch() *Batch {
 }
 
 // AddRecursive adds the given node and all child nodes to the BlockService
-func (n *dagService) AddRecursive(nd *Node) error {
-	_, err := n.Add(nd)
+func (n *dagService) AddRecursive(nt *NodeTree) error {
+	for _, linkNode := range nt.allNodes {
+		_, err := n.Add(linkNode)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err := n.Add(nt.Root)
 	if err != nil {
 		log.Info("AddRecursive Error: %s\n", err)
 		return err
-	}
-
-	for _, link := range nd.Links {
-		if link.Node != nil {
-			err := n.AddRecursive(link.Node)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	return nil

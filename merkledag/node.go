@@ -21,6 +21,13 @@ type Node struct {
 	cached mh.Multihash
 }
 
+// NodeTree represents a tre of nodes, with a root node and a list of nodes that
+// belong to that tree indexed by their hash
+type NodeTree struct {
+	Root *Node
+	allNodes map[string]*Node
+}
+
 // NodeStat is a statistics object for a Node. Mostly sizes.
 type NodeStat struct {
 	Hash           string
@@ -75,12 +82,12 @@ func MakeLink(n *Node) (*Link, error) {
 }
 
 // GetCachedNode returns the MDAG Node that was cached, or nil
-func (l *Link) GetCachedNode() *Node {
+func (l *Link) GetCachedNode(nt *NodeTree) *Node {
 	return l.Node
 }
 
 // GetNode returns the MDAG Node that this link points to
-func (l *Link) GetNode(ctx context.Context, serv DAGService) (*Node, error) {
+func (l *Link) GetNode(nt *NodeTree, ctx context.Context, serv DAGService) (*Node, error) {
 	if l.Node != nil {
 		return l.Node, nil
 	}
@@ -91,7 +98,7 @@ func (l *Link) GetNode(ctx context.Context, serv DAGService) (*Node, error) {
 // GetNodeAndCache return the MDAG Node that the link points to and store a
 // pointer to that node along with the link to speed up further retrivals. A
 // timeout is to be specified to avoid taking too much time.
-func (l *Link) GetNodeAndCache(ctx context.Context, serv DAGService) (*Node, error) {
+func (l *Link) GetNodeAndCache(nt *NodeTree, ctx context.Context, serv DAGService) (*Node, error) {
 	if l.Node == nil {
 		nd, err := serv.Get(ctx, key.Key(l.Hash))
 		if err != nil {
@@ -103,9 +110,14 @@ func (l *Link) GetNodeAndCache(ctx context.Context, serv DAGService) (*Node, err
 	return l.Node, nil
 }
 
+// Create a tree from a single node
+func (n *Node) Tree() *NodeTree {
+	return &NodeTree{ n, make(map[string]*Node) }
+}
+
 // AddNodeLink adds a link to another node.
-func (n *Node) AddNodeLink(name string, that *Node) error {
-	n.encoded = nil
+func (n *NodeTree) AddNodeLink(name string, that *Node) error {
+	n.Root.encoded = nil
 
 	lnk, err := MakeLink(that)
 
@@ -134,9 +146,9 @@ func (n *Node) AddNodeLinkClean(name string, that *Node) error {
 }
 
 // AddRawLink adds a copy of a link to this node
-func (n *Node) AddRawLink(name string, l *Link) error {
-	n.encoded = nil
-	n.Links = append(n.Links, &Link{
+func (n *NodeTree) AddRawLink(name string, l *Link) error {
+	n.Root.encoded = nil
+	n.Root.Links = append(n.Links, &Link{
 		Name: name,
 		Size: l.Size,
 		Hash: l.Hash,
@@ -183,13 +195,13 @@ func (n *Node) GetNodeLink(name string) (*Link, error) {
 	return nil, ErrNotFound
 }
 
-func (n *Node) GetLinkedNode(ctx context.Context, ds DAGService, name string) (*Node, error) {
+func (n *Node) GetLinkedNode(nt *NodeTree, ctx context.Context, ds DAGService, name string) (*Node, error) {
 	lnk, err := n.GetNodeLink(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return lnk.GetNode(ctx, ds)
+	return lnk.GetNode(nt, ctx, ds)
 }
 
 // Copy returns a copy of the node.
@@ -210,7 +222,7 @@ func (n *Node) UpdateNodeLink(name string, that *Node) (*Node, error) {
 	newnode := n.Copy()
 	err := newnode.RemoveNodeLink(name)
 	err = nil // ignore error
-	err = newnode.AddNodeLink(name, that)
+	err = newnode.Tree().AddNodeLink(name, that)
 	return newnode, err
 }
 
