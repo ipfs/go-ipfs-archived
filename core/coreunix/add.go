@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	gopath "path"
+	"strings"
 
 	ds "github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/jbenet/go-datastore"
 	syncds "github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/jbenet/go-datastore/sync"
@@ -23,6 +24,7 @@ import (
 	"github.com/ipfs/go-ipfs/commands/files"
 	core "github.com/ipfs/go-ipfs/core"
 	dag "github.com/ipfs/go-ipfs/merkledag"
+	tar "github.com/ipfs/go-ipfs/tar"
 	unixfs "github.com/ipfs/go-ipfs/unixfs"
 	logging "github.com/ipfs/go-ipfs/vendor/QmQg1J6vikuXF9oDvm4wpdeAUvvkVEKW1EYDw9HhTMnP2b/go-log"
 )
@@ -375,6 +377,15 @@ func (adder *Adder) addFile(file files.File) error {
 		}
 
 		return adder.addNode(dagnode, s.FileName())
+	}
+
+	if strings.HasSuffix(file.FileName(), ".tar") {
+		nd, err := tar.ImportTar(file, adder.node.DAG)
+		if err != nil {
+			return err
+		}
+
+		return adder.addNode(nd, file.FileName())
 	}
 
 	// case for regular file
