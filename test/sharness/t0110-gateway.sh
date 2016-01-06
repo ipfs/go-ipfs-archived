@@ -92,10 +92,19 @@ test_expect_success "log output looks good" '
 	grep "log API client connected" log_out
 '
 
+test_expect_success "GET /api path fails" '
+	curl -I -X GET http://127.0.0.1:$apiport/api/v0/id > getapi_out
+'
+
+test_expect_success "output looks good" '
+	grep "405 Method Not Allowed" getapi_out
+'
+
+
 # test ipfs readonly api
 
 test_curl_gateway_api() {
-    curl -sfo actual "http://127.0.0.1:$port/api/v0/$1"
+    curl -X POST -sfo actual "http://127.0.0.1:$port/api/v0/$1"
 }
 
 test_expect_success "get IPFS directory file through readonly API succeeds" '
@@ -112,7 +121,7 @@ test_expect_success "refs IPFS directory file through readonly API succeeds" '
 
 test_expect_success "test gateway api is sanitized" '
 for cmd in "add" "block/put" "bootstrap" "config" "dht" "diag" "dns" "get" "id" "mount" "name/publish" "object/put" "object/new" "object/patch" "pin" "ping" "refs/local" "repo" "resolve" "stats" "swarm" "tour" "file" "update" "version" "bitswap"; do
-    test_curl_resp_http_code "http://127.0.0.1:$port/api/v0/$cmd" "HTTP/1.1 404 Not Found"
+    test_curl_api_resp_code "http://127.0.0.1:$port/api/v0/$cmd" "HTTP/1.1 404 Not Found"
   done
 '
 

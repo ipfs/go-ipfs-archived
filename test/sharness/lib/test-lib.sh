@@ -290,6 +290,27 @@ test_curl_resp_http_code() {
 	return 1
 }
 
+test_curl_api_resp_code() {
+	curl -X POST -I "$1" >curl_output || {
+		echo "curl error with url: '$1'"
+		echo "curl output was:"
+		cat curl_output
+		return 1
+	}
+	shift &&
+	RESP=$(head -1 curl_output) &&
+	while test "$#" -gt 0
+	do
+		expr "$RESP" : "$1" >/dev/null && return
+		shift
+	done
+	echo "curl response didn't match!"
+	echo "curl response was: '$RESP'"
+	echo "curl output was:"
+	cat curl_output
+	return 1
+}
+
 test_must_be_empty() {
 	if test -s "$1"
 	then

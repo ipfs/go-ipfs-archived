@@ -110,6 +110,10 @@ func (i Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (i internalHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Incoming API request: ", r.URL)
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 
 	defer func() {
 		if r := recover(); r != nil {
