@@ -3,6 +3,7 @@ package multistream
 import (
 	"fmt"
 	"io"
+	"os"
 	"sync"
 )
 
@@ -110,13 +111,18 @@ func (l *lazyConn) Write(b []byte) (int, error) {
 		go l.readHandshake()
 		err := l.writeHandshake()
 		if err != nil {
+			fmt.Fprintf(os.Stderr, "WHS ERROR: %s\n", err)
 			return 0, err
 		}
 
 		l.whandshake = true
 	}
 
-	return l.con.Write(b)
+	n, err := l.con.Write(b)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "lazyconwrite ERROR: %s\n", err)
+	}
+	return n, err
 }
 
 func (l *lazyConn) Close() error {

@@ -173,7 +173,7 @@ func (h *BasicHost) NewStream(pid protocol.ID, p peer.ID) (inet.Stream, error) {
 	lzcon := msmux.NewMSSelect(logStream, string(pid))
 	return &streamWrapper{
 		Stream: logStream,
-		rw:     lzcon,
+		rwc:    lzcon,
 	}, nil
 }
 
@@ -256,13 +256,17 @@ func (h *BasicHost) GetBandwidthReporter() metrics.Reporter {
 
 type streamWrapper struct {
 	inet.Stream
-	rw io.ReadWriter
+	rwc io.ReadWriteCloser
 }
 
 func (s *streamWrapper) Read(b []byte) (int, error) {
-	return s.rw.Read(b)
+	return s.rwc.Read(b)
 }
 
 func (s *streamWrapper) Write(b []byte) (int, error) {
-	return s.rw.Write(b)
+	return s.rwc.Write(b)
+}
+
+func (s *streamWrapper) Close() error {
+	return s.rwc.Close()
 }
