@@ -653,9 +653,6 @@ are run with the '--flush=false'.
 			return
 		}
 
-		// take the lock and defer the unlock
-		defer nd.Blockstore.PinLock().Unlock()
-
 		path := "/"
 		if len(req.Arguments()) > 0 {
 			path = req.Arguments()[0]
