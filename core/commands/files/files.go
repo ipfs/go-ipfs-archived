@@ -501,10 +501,6 @@ Warning:
 
 		create, _, _ := req.Option("create").Bool()
 		trunc, _, _ := req.Option("truncate").Bool()
-		flush, set, _ := req.Option("flush").Bool()
-		if !set {
-			flush = true
-		}
 
 		nd, err := req.InvocContext().GetNode()
 		if err != nil {
@@ -528,18 +524,7 @@ Warning:
 			return
 		}
 
-		if flush {
-			defer func() {
-				fi.Close()
-				err := mfs.FlushPath(nd.FilesRoot, path)
-				if err != nil {
-					res.SetError(err, cmds.ErrNormal)
-					return
-				}
-			}()
-		} else {
-			defer fi.Sync()
-		}
+		defer fi.Close()
 
 		if trunc {
 			if err := fi.Truncate(0); err != nil {

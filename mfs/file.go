@@ -95,13 +95,12 @@ func (fi *File) flushUp() error {
 		return err
 	}
 
-	//name := fi.name
-	//parent := fi.parent
+	name := fi.name
+	parent := fi.parent
 
 	// explicit unlock *only* before closeChild call
 	fi.Unlock()
-	return nil
-	//return parent.closeChild(name, nd)
+	return parent.closeChild(name, nd)
 }
 
 // Sync flushes the changes in the file to disk
