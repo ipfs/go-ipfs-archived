@@ -51,13 +51,17 @@ func NewDirectory(ctx context.Context, name string, node *dag.Node, parent child
 
 // closeChild updates the child by the given name to the dag node 'nd'
 // and changes its own dag node
-func (d *Directory) closeChild(name string, nd *dag.Node) error {
-	mynd, err := d.closeChildUpdate(name, nd)
-	if err != nil {
-		return err
+func (d *Directory) closeChild(name string, nd *dag.Node, sync bool) error {
+	if sync {
+		mynd, err := d.closeChildUpdate(name, nd)
+		if err != nil {
+			return err
+		}
+
+		return d.parent.closeChild(d.name, mynd, true)
 	}
 
-	return d.parent.closeChild(d.name, mynd)
+	return d.updateChild(name, nd)
 }
 
 // closeChildUpdate is the portion of closeChild that needs to be locked around
@@ -300,7 +304,7 @@ func (d *Directory) Flush() error {
 		return err
 	}
 
-	return d.parent.closeChild(d.name, nd)
+	return d.parent.closeChild(d.name, nd, true)
 }
 
 // AddChild adds the node 'nd' under this directory giving it the name 'name'

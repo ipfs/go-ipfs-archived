@@ -501,6 +501,10 @@ Warning:
 
 		create, _, _ := req.Option("create").Bool()
 		trunc, _, _ := req.Option("truncate").Bool()
+		flush, fset, _ := req.Option("flush").Bool()
+		if !fset {
+			flush = true
+		}
 
 		nd, err := req.InvocContext().GetNode()
 		if err != nil {
@@ -524,7 +528,11 @@ Warning:
 			return
 		}
 
-		defer fi.Close()
+		if flush {
+			defer fi.Close()
+		} else {
+			defer fi.Sync()
+		}
 
 		if trunc {
 			if err := fi.Truncate(0); err != nil {
