@@ -41,7 +41,7 @@ func ApplyChange(ctx context.Context, ds dag.DAGService, nd *dag.Node, cs []*Cha
 	for _, c := range cs {
 		switch c.Type {
 		case Add:
-			child, err := ds.Get(ctx, c.After)
+			child, err := ds.GetPB(ctx, c.After)
 			if err != nil {
 				return nil, err
 			}
@@ -61,7 +61,7 @@ func ApplyChange(ctx context.Context, ds dag.DAGService, nd *dag.Node, cs []*Cha
 			if err != nil {
 				return nil, err
 			}
-			child, err := ds.Get(ctx, c.After)
+			child, err := ds.GetPB(ctx, c.After)
 			if err != nil {
 				return nil, err
 			}

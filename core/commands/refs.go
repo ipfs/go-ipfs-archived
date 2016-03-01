@@ -243,7 +243,7 @@ func (rw *RefWriter) writeRefsRecursive(n *dag.Node) (int, error) {
 			return count, err
 		}
 
-		nd, err := ng.Get(rw.Ctx)
+		nd, err := ng.GetPB(rw.Ctx)
 		if err != nil {
 			return count, err
 		}

@@ -291,7 +291,7 @@ a file containing 'bar', and returns the hash of the new object.
 
 		e := dagutils.NewDagEditor(root, nd.DAG)
 
-		childnd, err := nd.DAG.Get(req.Context(), childk)
+		childnd, err := nd.DAG.GetPB(req.Context(), childk)
 		if err != nil {
 			res.SetError(err, cmds.ErrNormal)
 			return

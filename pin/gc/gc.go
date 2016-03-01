@@ -72,7 +72,7 @@ func GC(ctx context.Context, bs bstore.GCBlockstore, pn pin.Pinner) (<-chan key.
 func Descendants(ctx context.Context, ds dag.DAGService, set key.KeySet, roots []key.Key) error {
 	for _, k := range roots {
 		set.Add(k)
-		nd, err := ds.Get(ctx, k)
+		nd, err := ds.GetPB(ctx, k)
 		if err != nil {
 			return err
 		}

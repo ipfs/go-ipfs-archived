@@ -18,7 +18,7 @@ var ErrNotFound = fmt.Errorf("merkledag: not found")
 // DAGService is an IPFS Merkle DAG service.
 type DAGService interface {
 	Add(*Node) (key.Key, error)
-	Get(context.Context, key.Key) (*Node, error)
+	GetPB(context.Context, key.Key) (*Node, error)
 	Remove(*Node) error
 
 	// GetDAG returns, in order, all the single leve child
@@ -66,8 +66,9 @@ func (n *dagService) Batch() *Batch {
 	return &Batch{ds: n, MaxSize: 8 * 1024 * 1024}
 }
 
-// Get retrieves a node from the dagService, fetching the block in the BlockService
-func (n *dagService) Get(ctx context.Context, k key.Key) (*Node, error) {
+// GetPB retrieves a Protocol Buffer node from the dagService, fetching the
+// block in the BlockService
+func (n *dagService) GetPB(ctx context.Context, k key.Key) (*Node, error) {
 	if n == nil {
 		return nil, fmt.Errorf("dagService is nil")
 	}
@@ -249,10 +250,10 @@ type nodePromise struct {
 // from its internal channels, subsequent calls will return the
 // cached node.
 type NodeGetter interface {
-	Get(context.Context) (*Node, error)
+	GetPB(context.Context) (*Node, error)
 }
 
-func (np *nodePromise) Get(ctx context.Context) (*Node, error) {
+func (np *nodePromise) GetPB(ctx context.Context) (*Node, error) {
 	if np.cache != nil {
 		return np.cache, nil
 	}
@@ -314,7 +315,7 @@ func EnumerateChildren(ctx context.Context, ds DAGService, root *Node, set key.K
 		k := key.Key(lnk.Hash)
 		if !set.Has(k) {
 			set.Add(k)
-			child, err := ds.Get(ctx, k)
+			child, err := ds.GetPB(ctx, k)
 			if err != nil {
 				return err
 			}

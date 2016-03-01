@@ -6,10 +6,36 @@ import (
 	"gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
 
 	key "github.com/ipfs/go-ipfs/blocks/key"
+	ipldstream "github.com/ipfs/go-ipld/stream"
 	mh "gx/ipfs/QmYf7ng2hG5XBtJA3tN34DQ2GUN5HNksEw1rLDkmr6vGku/go-multihash"
 )
 
 var ErrLinkNotFound = fmt.Errorf("no link by that name")
+
+type IPLDNode interface {
+	ipldstream.NodeReader
+	Multihash() mh.Multihash
+	Key() key.Key
+	Size() uint64
+}
+
+type ipldNode struct {
+	ipldstream.NodeReader
+	hash mh.Multihash
+	size uint64
+}
+
+func (n *ipldNode) Key() key.Key {
+	return key.Key(n.hash)
+}
+
+func (n *ipldNode) Multihash() mh.Multihash {
+	return n.hash
+}
+
+func (n *ipldNode) Size() uint64 {
+	return n.size
+}
 
 // Node represents a node in the IPFS Merkle DAG.
 // nodes have opaque data and a set of navigable links.
@@ -75,7 +101,7 @@ func MakeLink(n *Node) (*Link, error) {
 
 // GetNode returns the MDAG Node that this link points to
 func (l *Link) GetNode(ctx context.Context, serv DAGService) (*Node, error) {
-	return serv.Get(ctx, key.Key(l.Hash))
+	return serv.GetPB(ctx, key.Key(l.Hash))
 }
 
 // AddNodeLink adds a link to another node.

@@ -175,7 +175,7 @@ func (dm *DagModifier) Sync() error {
 		return err
 	}
 
-	nd, err := dm.dagserv.Get(dm.ctx, thisk)
+	nd, err := dm.dagserv.GetPB(dm.ctx, thisk)
 	if err != nil {
 		return err
 	}

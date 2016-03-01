@@ -28,7 +28,7 @@ func NewDirectory(dserv mdag.DAGService) *directoryBuilder {
 
 // AddChild adds a (name, key)-pair to the root node.
 func (d *directoryBuilder) AddChild(ctx context.Context, name string, k key.Key) error {
-	cnode, err := d.dserv.Get(ctx, k)
+	cnode, err := d.dserv.GetPB(ctx, k)
 	if err != nil {
 		return err
 	}

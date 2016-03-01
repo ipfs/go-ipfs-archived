@@ -110,7 +110,7 @@ func (p *pinner) Pin(ctx context.Context, node *mdag.Node, recurse bool) error {
 
 		p.recursePin.AddBlock(k)
 	} else {
-		if _, err := p.dserv.Get(ctx, k); err != nil {
+		if _, err := p.dserv.GetPB(ctx, k); err != nil {
 			return err
 		}
 
@@ -203,7 +203,7 @@ func (p *pinner) isPinnedWithType(k key.Key, typeStr string) (string, bool, erro
 
 	// Default is "indirect"
 	for _, rk := range p.recursePin.GetKeys() {
-		rnd, err := p.dserv.Get(context.Background(), rk)
+		rnd, err := p.dserv.GetPB(context.Background(), rk)
 		if err != nil {
 			return "", false, err
 		}
@@ -251,7 +251,7 @@ func LoadPinner(d ds.Datastore, dserv mdag.DAGService) (Pinner, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*5)
 	defer cancel()
 
-	root, err := dserv.Get(ctx, rootKey)
+	root, err := dserv.GetPB(ctx, rootKey)
 	if err != nil {
 		return nil, fmt.Errorf("cannot find pinning root object: %v", err)
 	}
@@ -380,7 +380,7 @@ func hasChild(ds mdag.DAGService, root *mdag.Node, child key.Key) (bool, error) 
 			return true, nil
 		}
 
-		nd, err := ds.Get(context.Background(), k)
+		nd, err := ds.GetPB(context.Background(), k)
 		if err != nil {
 			return false, err
 		}

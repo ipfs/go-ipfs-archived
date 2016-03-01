@@ -110,7 +110,7 @@ func (dr *DagReader) precalcNextBuf(ctx context.Context) error {
 		return io.EOF
 	}
 
-	nxt, err := dr.promises[dr.linkPosition].Get(ctx)
+	nxt, err := dr.promises[dr.linkPosition].GetPB(ctx)
 	if err != nil {
 		return err
 	}

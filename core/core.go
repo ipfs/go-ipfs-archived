@@ -489,7 +489,7 @@ func (n *IpfsNode) loadFilesRoot() error {
 		}
 	case err == nil:
 		k := key.Key(val.([]byte))
-		nd, err = n.DAG.Get(n.Context(), k)
+		nd, err = n.DAG.GetPB(n.Context(), k)
 		if err != nil {
 			return fmt.Errorf("error loading filesroot from DAG: %s", err)
 		}

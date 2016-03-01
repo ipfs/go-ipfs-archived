@@ -10,7 +10,7 @@ import (
 func AddMetadataTo(n *core.IpfsNode, skey string, m *ft.Metadata) (string, error) {
 	ukey := key.B58KeyDecode(skey)
 
-	nd, err := n.DAG.Get(n.Context(), ukey)
+	nd, err := n.DAG.GetPB(n.Context(), ukey)
 	if err != nil {
 		return "", err
 	}
@@ -37,7 +37,7 @@ func AddMetadataTo(n *core.IpfsNode, skey string, m *ft.Metadata) (string, error
 func Metadata(n *core.IpfsNode, skey string) (*ft.Metadata, error) {
 	ukey := key.B58KeyDecode(skey)
 
-	nd, err := n.DAG.Get(n.Context(), ukey)
+	nd, err := n.DAG.GetPB(n.Context(), ukey)
 	if err != nil {
 		return nil, err
 	}
