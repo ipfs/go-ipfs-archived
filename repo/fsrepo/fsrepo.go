@@ -368,13 +368,19 @@ func (r *FSRepo) openKeystore() error {
 func (r *FSRepo) openDatastore() error {
 	switch r.config.Datastore.Type {
 	case "default", "leveldb", "":
+		// TODO: This is for legacy configs, remove in the future
 		d, err := openDefaultDatastore(r)
 		if err != nil {
 			return err
 		}
 		r.ds = d
 	default:
-		return fmt.Errorf("unknown datastore type: %s", r.config.Datastore.Type)
+		d, err := openDatastore(r.config.Datastore.Type, r.config.Datastore.ParamData())
+		if err != nil {
+			return err
+		}
+
+		r.ds = d
 	}
 
 	// Wrap it with metrics gathering
