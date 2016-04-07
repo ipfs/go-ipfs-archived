@@ -47,7 +47,7 @@ func Init(out io.Writer, nBitsForKeypair int) (*Config, error) {
 
 		Bootstrap:        BootstrapPeerStrings(bootstrapPeers),
 		SupernodeRouting: *snr,
-		Datastore:        *ds,
+		Datastore:        ds,
 		Identity:         identity,
 		Discovery: Discovery{MDNS{
 			Enabled:  true,
@@ -77,12 +77,12 @@ func Init(out io.Writer, nBitsForKeypair int) (*Config, error) {
 	return conf, nil
 }
 
-func datastoreConfig() (*Datastore, error) {
+func datastoreConfig() (Datastore, error) {
 	dspath, err := DataStorePath("")
 	if err != nil {
-		return nil, err
+		return Datastore{}, err
 	}
-	return &Datastore{
+	return Datastore{
 		Path:               dspath,
 		Type:               "leveldb",
 		StorageMax:         "10GB",
