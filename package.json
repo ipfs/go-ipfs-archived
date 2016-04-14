@@ -43,5 +43,8 @@
   "language": "go",
   "license": "",
   "name": "go-ipfs",
-  "version": "0.4.0"
+  "version": "0.4.0",
+  "gx": {
+	"goversion":"1.5.2"
+  }
 }
