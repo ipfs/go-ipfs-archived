@@ -75,6 +75,15 @@ test_add_cat_file() {
         echo "added $HASH hello.txt" >expected &&
         test_cmp expected actual
     '
+
+	test_expect_success "ipfs cat piped into add succeeds" '
+        ipfs cat $HASH | ipfs add
+	'
+
+	test_expect_success "ipfs cat piped into add looks good" '
+        ipfs cat $HASH | ipfs add > actual &&
+        grep $HASH actual
+	'
 }
 
 test_add_cat_5MB() {
