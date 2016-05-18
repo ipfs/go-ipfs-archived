@@ -11,7 +11,6 @@ import (
 	cmdsHttp "github.com/ipfs/go-ipfs/commands/http"
 	core "github.com/ipfs/go-ipfs/core"
 	corecommands "github.com/ipfs/go-ipfs/core/commands"
-	config "github.com/ipfs/go-ipfs/repo/config"
 )
 
 const originEnvKey = "API_ORIGIN"
@@ -46,22 +45,22 @@ func addCORSFromEnv(c *cmdsHttp.ServerConfig) {
 	}
 }
 
-func addHeadersFromConfig(c *cmdsHttp.ServerConfig, nc *config.Config) {
-	log.Info("Using API.HTTPHeaders:", nc.API.HTTPHeaders)
+func addHeadersFromConfig(c *cmdsHttp.ServerConfig, headers map[string][]string) {
+	log.Info("Using HTTPHeaders:", headers)
 
-	if acao := nc.API.HTTPHeaders[cmdsHttp.ACAOrigin]; acao != nil {
+	if acao := headers[cmdsHttp.ACAOrigin]; acao != nil {
 		c.SetAllowedOrigins(acao...)
 	}
-	if acam := nc.API.HTTPHeaders[cmdsHttp.ACAMethods]; acam != nil {
+	if acam := headers[cmdsHttp.ACAMethods]; acam != nil {
 		c.SetAllowedMethods(acam...)
 	}
-	if acac := nc.API.HTTPHeaders[cmdsHttp.ACACredentials]; acac != nil {
+	if acac := headers[cmdsHttp.ACACredentials]; acac != nil {
 		for _, v := range acac {
 			c.SetAllowCredentials(strings.ToLower(v) == "true")
 		}
 	}
 
-	c.Headers = nc.API.HTTPHeaders
+	c.Headers = headers
 }
 
 func addCORSDefaults(c *cmdsHttp.ServerConfig) {
@@ -109,7 +108,13 @@ func commandsOption(cctx commands.Context, command *commands.Command) ServeOptio
 			return nil, err
 		}
 
-		addHeadersFromConfig(cfg, rcfg)
+		if isReadOnly(command) {
+			log.Info("ROAPI: Using Gateway's HTTPHeaders")
+			addHeadersFromConfig(cfg, rcfg.Gateway.HTTPHeaders)
+		} else {
+			log.Info("Full API: Using API's HTTPHeaders")
+			addHeadersFromConfig(cfg, rcfg.API.HTTPHeaders)
+		}
 		addCORSFromEnv(cfg)
 		addCORSDefaults(cfg)
 		patchCORSVars(cfg, l.Addr())
@@ -118,6 +123,10 @@ func commandsOption(cctx commands.Context, command *commands.Command) ServeOptio
 		mux.Handle(cmdsHttp.ApiPath+"/", cmdHandler)
 		return mux, nil
 	}
+}
+
+func isReadOnly(command *commands.Command) bool {
+	return command == corecommands.RootRO
 }
 
 func CommandsOption(cctx commands.Context) ServeOption {
