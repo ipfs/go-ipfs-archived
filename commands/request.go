@@ -69,8 +69,9 @@ type Request interface {
 	Options() OptMap
 	SetOption(name string, val interface{})
 	SetOptions(opts OptMap) error
-	Arguments() []string
-	SetArguments([]string)
+	ArgumentsAll() []string
+	Arguments(string) []ArgumentValue
+	SetArguments(ArgumentValueMap)
 	Files() files.File
 	SetFiles(files.File)
 	Context() context.Context
@@ -85,17 +86,16 @@ type Request interface {
 }
 
 type request struct {
-	path         []string
-	options      OptMap
-	arguments    []string
-	argumentsMap map[string][]ArgumentValue
-	files        files.File
-	cmd          *Command
-	ctx          Context
-	rctx         context.Context
-	optionDefs   map[string]Option
-	values       map[string]interface{}
-	stdin        io.Reader
+	path       []string
+	options    OptMap
+	arguments  map[string][]ArgumentValue
+	files      files.File
+	cmd        *Command
+	ctx        Context
+	rctx       context.Context
+	optionDefs map[string]Option
+	values     map[string]interface{}
+	stdin      io.Reader
 }
 
 // Path returns the command path of this request
@@ -167,13 +167,23 @@ func (r *request) SetOptions(opts OptMap) error {
 	return r.ConvertOptions()
 }
 
-// Arguments returns the arguments slice
-func (r *request) Arguments() []string {
-	return r.arguments
+// Arguments returns the arguments slice for given argument group
+func (r *request) Arguments(group string) []ArgumentValue {
+	return r.arguments[group]
 }
 
-func (r *request) SetArguments(args []string) {
+func (r *request) SetArguments(args ArgumentValueMap) {
 	r.arguments = args
+}
+
+func (r *request) ArgumentsAll() []string {
+	res := make([]string)
+	for _, argDef := range r.cmd.Arguments {
+		for _, argVal := range r.Arguments(argDef.Name) {
+			append(res, argVal.Value)
+		}
+	}
+	return res
 }
 
 func (r *request) Files() files.File {
@@ -310,7 +320,7 @@ func NewEmptyRequest() (Request, error) {
 
 // NewRequest returns a request initialized with given arguments
 // An non-nil error will be returned if the provided option values are invalid
-func NewRequest(path []string, opts OptMap, args []string, argsMap map[string][]ArgumentValue, file files.File, cmd *Command, optDefs map[string]Option) (Request, error) {
+func NewRequest(path []string, opts OptMap, args ArgumentValueMap, file files.File, cmd *Command, optDefs map[string]Option) (Request, error) {
 	if opts == nil {
 		opts = make(OptMap)
 	}

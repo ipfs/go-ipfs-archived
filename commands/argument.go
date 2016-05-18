@@ -2,6 +2,7 @@ package commands
 
 import (
 	path "github.com/ipfs/go-ipfs/path"
+	"gx/ipfs/QmZNVWh8LLjAavuQ2JXuFmuYH3C11xo988vSgp7UQrTRj1/go-ipfs-util"
 )
 
 type ArgumentType int
@@ -52,32 +53,34 @@ func PathArg(name string, required, variadic bool, description string) Argument 
 	}
 }
 
+type ArgumentValuesMap map[string][]ArgumentValue
+
 type ArgumentValue struct {
-	value String
-	def   Argument
+	Value string
+	Def   Argument
 }
 
 func (a ArgumentValue) File() (value string, found bool, err error) {
-	if a.def != ArgFile {
+	if a.Def.Type != ArgFile {
 		return "", false, util.ErrCast()
 	}
-	return a.value, len(a.value) > 0, nil
+	return a.Value, len(a.Value) > 0, nil
 }
 
 func (a ArgumentValue) String() (value string, found bool, err error) {
-	if a.def != ArgString {
+	if a.Def.Type != ArgString {
 		return "", false, util.ErrCast()
 	}
-	return a.value, len(a.value) > 0, nil
+	return a.Value, len(a.Value) > 0, nil
 }
 
 func (a ArgumentValue) Path() (value path.Path, found bool, err error) {
-	if a.def != ArgPath {
+	if a.Def.Type != ArgPath {
 		return "", false, util.ErrCast()
 	}
-	val, err := path.ParsePath(a.value)
+	val, err := path.ParsePath(a.Value)
 
-	return val, a.found, err
+	return val, len(a.Value) > 0, err
 }
 
 // TODO: modifiers might need a different API?
