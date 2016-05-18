@@ -1,10 +1,15 @@
 package commands
 
+import (
+	path "github.com/ipfs/go-ipfs/path"
+)
+
 type ArgumentType int
 
 const (
 	ArgString ArgumentType = iota
 	ArgFile
+	ArgPath
 )
 
 type Argument struct {
@@ -35,6 +40,44 @@ func FileArg(name string, required, variadic bool, description string) Argument 
 		Variadic:    variadic,
 		Description: description,
 	}
+}
+
+func PathArg(name string, required, variadic bool, description string) Argument {
+	return Argument{
+		Name:        name,
+		Type:        ArgPath,
+		Required:    required,
+		Variadic:    variadic,
+		Description: description,
+	}
+}
+
+type ArgumentValue struct {
+	value String
+	def   Argument
+}
+
+func (a ArgumentValue) File() (value string, found bool, err error) {
+	if a.def != ArgFile {
+		return "", false, util.ErrCast()
+	}
+	return a.value, len(a.value) > 0, nil
+}
+
+func (a ArgumentValue) String() (value string, found bool, err error) {
+	if a.def != ArgString {
+		return "", false, util.ErrCast()
+	}
+	return a.value, len(a.value) > 0, nil
+}
+
+func (a ArgumentValue) Path() (value path.Path, found bool, err error) {
+	if a.def != ArgPath {
+		return "", false, util.ErrCast()
+	}
+	val, err := path.ParsePath(a.value)
+
+	return val, a.found, err
 }
 
 // TODO: modifiers might need a different API?

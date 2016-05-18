@@ -85,16 +85,17 @@ type Request interface {
 }
 
 type request struct {
-	path       []string
-	options    OptMap
-	arguments  []string
-	files      files.File
-	cmd        *Command
-	ctx        Context
-	rctx       context.Context
-	optionDefs map[string]Option
-	values     map[string]interface{}
-	stdin      io.Reader
+	path         []string
+	options      OptMap
+	arguments    []string
+	argumentsMap map[string][]ArgumentValue
+	files        files.File
+	cmd          *Command
+	ctx          Context
+	rctx         context.Context
+	optionDefs   map[string]Option
+	values       map[string]interface{}
+	stdin        io.Reader
 }
 
 // Path returns the command path of this request
@@ -309,7 +310,7 @@ func NewEmptyRequest() (Request, error) {
 
 // NewRequest returns a request initialized with given arguments
 // An non-nil error will be returned if the provided option values are invalid
-func NewRequest(path []string, opts OptMap, args []string, file files.File, cmd *Command, optDefs map[string]Option) (Request, error) {
+func NewRequest(path []string, opts OptMap, args []string, argsMap map[string][]ArgumentValue, file files.File, cmd *Command, optDefs map[string]Option) (Request, error) {
 	if opts == nil {
 		opts = make(OptMap)
 	}
