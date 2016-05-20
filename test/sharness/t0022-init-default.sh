@@ -48,6 +48,15 @@ test_expect_success "ipfs config output looks good" '
 	test_cmp expected actual
 '
 
+test_expect_success "clean up ipfs dir" '
+	rm -rf "$IPFS_PATH"
+'
+
+test_expect_success "ipfs init works with no input" '
+	true | ipfs init >actual_init ||
+	test_fsh cat actual_init
+'
+
 test_launch_ipfs_daemon
 
 test_kill_ipfs_daemon
