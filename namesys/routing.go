@@ -145,12 +145,14 @@ func (r *routingResolver) resolveOnce(ctx context.Context, name string) (path.Pa
 		if err != nil {
 			log.Warning("RoutingResolve get failed.")
 			resp <- err
+			return
 		}
 
 		entry = new(pb.IpnsEntry)
 		err = proto.Unmarshal(val, entry)
 		if err != nil {
 			resp <- err
+			return
 		}
 		resp <- nil
 	}()
@@ -160,6 +162,7 @@ func (r *routingResolver) resolveOnce(ctx context.Context, name string) (path.Pa
 		pubk, err := routing.GetPublicKey(r.routing, ctx, hash)
 		if err != nil {
 			resp <- err
+			return
 		}
 		pubkey = pubk
 		resp <- nil
