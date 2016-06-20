@@ -1,8 +1,8 @@
 package datastore2
 
 import (
-	ds "gx/ipfs/QmZ6A6P6AMo8SR3jXAwzTuSU6B9R2Y4eqW2yW9VvfUayDN/go-datastore"
-	dsq "gx/ipfs/QmZ6A6P6AMo8SR3jXAwzTuSU6B9R2Y4eqW2yW9VvfUayDN/go-datastore/query"
+	ds "gx/ipfs/QmVnFgtzxgPB24nyqLzpWRwjtCDjuda1DipFZcek7TFmmQ/go-datastore"
+	dsq "gx/ipfs/QmVnFgtzxgPB24nyqLzpWRwjtCDjuda1DipFZcek7TFmmQ/go-datastore/query"
 
 	delay "github.com/ipfs/go-ipfs/thirdparty/delay"
 )

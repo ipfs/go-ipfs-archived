@@ -11,8 +11,8 @@ import (
 	bs "github.com/ipfs/go-ipfs/blockservice"
 	"github.com/ipfs/go-ipfs/exchange/offline"
 	mdag "github.com/ipfs/go-ipfs/merkledag"
-	ds "gx/ipfs/QmZ6A6P6AMo8SR3jXAwzTuSU6B9R2Y4eqW2yW9VvfUayDN/go-datastore"
-	dssync "gx/ipfs/QmZ6A6P6AMo8SR3jXAwzTuSU6B9R2Y4eqW2yW9VvfUayDN/go-datastore/sync"
+	ds "gx/ipfs/QmVnFgtzxgPB24nyqLzpWRwjtCDjuda1DipFZcek7TFmmQ/go-datastore"
+	dssync "gx/ipfs/QmVnFgtzxgPB24nyqLzpWRwjtCDjuda1DipFZcek7TFmmQ/go-datastore/sync"
 	"gx/ipfs/QmZNVWh8LLjAavuQ2JXuFmuYH3C11xo988vSgp7UQrTRj1/go-ipfs-util"
 )
 
