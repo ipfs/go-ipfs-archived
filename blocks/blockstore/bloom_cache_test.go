@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ipfs/go-ipfs/blocks"
+	"github.com/ipfs/go-ipfs/blocks/key"
 
 	ds "gx/ipfs/QmNgqJarToRiq2GBaPJhkmW4B5BxS5B74E1rkGvv2JoaTp/go-datastore"
 	dsq "gx/ipfs/QmNgqJarToRiq2GBaPJhkmW4B5BxS5B74E1rkGvv2JoaTp/go-datastore/query"
@@ -90,6 +91,33 @@ func TestHasIsBloomCached(t *testing.T) {
 
 	if err != nil {
 		t.Fatal("there should't be an error")
+	}
+}
+
+func BenchmarkEmptyBloomCache(b *testing.B) {
+	cd := &callbackDatastore{f: func() {}, ds: ds.NewMapDatastore()}
+	bs := NewBlockstore(syncds.MutexWrap(cd))
+
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	cachedbs, err := testBloomCached(bs, ctx)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	select {
+	case <-cachedbs.rebuildChan:
+	case <-ctx.Done():
+		b.Fatalf("Timeout wating for rebuild: %d", cachedbs.bloom.ElementsAdded())
+	}
+
+	keys := make([]key.Key, b.N)
+	for i := 0; i < b.N; i++ {
+		keys[i] = blocks.NewBlock([]byte(fmt.Sprintf("data: %d", i))).Key()
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		cachedbs.Has(keys[i])
 	}
 }
 
