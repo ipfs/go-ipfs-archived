@@ -1,51 +1,56 @@
 package blockstore
 
 import (
+	"sync"
+
 	"github.com/ipfs/go-ipfs/blocks"
 	key "github.com/ipfs/go-ipfs/blocks/key"
+
 	bloom "gx/ipfs/QmWQ2SJisXwcCLsUXLwYCKSfyExXjFRW2WbBH5sqCUnwX5/bbloom"
 	context "gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
-
-	"sync/atomic"
 )
 
 // bloomCached returns Blockstore that caches Has requests using Bloom filter
 // Size is size of bloom filter in bytes
-func bloomCached(bs Blockstore, ctx context.Context, bloomSize, hashCount int) (*bloomcache, error) {
-	bl, err := bloom.New(float64(bloomSize), float64(hashCount))
+func newBloomCachedBS(bs Blockstore, ctx context.Context, bloomSize, hashCount int) (*bloomcache, error) {
+	bloom, err := bloom.New(float64(bloomSize), float64(hashCount))
 	if err != nil {
 		return nil, err
 	}
-	bc := &bloomcache{blockstore: bs, bloom: bl}
-	bc.Invalidate()
-	go bc.Rebuild(ctx)
+	bc := &bloomcache{blockstore: bs}
+	bc.invalidate()
+	go bc.build(bloom, ctx)
+	bc.initialBuildChan = make(chan struct{})
 
 	return bc, nil
 }
 
 type bloomcache struct {
-	bloom  *bloom.Bloom
-	active int32
+	bloomLock sync.RWMutex
+	bloom     *bloom.Bloom
 
 	// This chan is only used for testing to wait for bloom to enable
-	rebuildChan chan struct{}
-	blockstore  Blockstore
+	initialBuildChan chan struct{}
+	blockstore       Blockstore
 
 	// Statistics
 	hits   uint64
 	misses uint64
 }
 
-func (b *bloomcache) Invalidate() {
-	b.rebuildChan = make(chan struct{})
-	atomic.StoreInt32(&b.active, 0)
+func (b *bloomcache) invalidate() {
+	b.bloomLock.Lock()
+	b.bloom = nil
+	b.bloomLock.Unlock()
 }
 
 func (b *bloomcache) BloomActive() bool {
-	return atomic.LoadInt32(&b.active) != 0
+	b.bloomLock.RLock()
+	defer b.bloomLock.RUnlock()
+	return b.bloom != nil
 }
 
-func (b *bloomcache) Rebuild(ctx context.Context) {
+func (b *bloomcache) build(bloom *bloom.Bloom, ctx context.Context) {
 	evt := log.EventBegin(ctx, "bloomcache.Rebuild")
 	defer evt.Done()
 
@@ -59,7 +64,7 @@ func (b *bloomcache) Rebuild(ctx context.Context) {
 		select {
 		case key, ok := <-ch:
 			if ok {
-				b.bloom.AddTS([]byte(key)) // Use binary key, the more compact the better
+				bloom.AddTS([]byte(key)) // Use binary key, the more compact the better
 			} else {
 				finish = true
 			}
@@ -68,8 +73,10 @@ func (b *bloomcache) Rebuild(ctx context.Context) {
 			return
 		}
 	}
-	close(b.rebuildChan)
-	atomic.StoreInt32(&b.active, 1)
+	b.bloomLock.Lock()
+	b.bloom = bloom
+	b.bloomLock.Unlock()
+	close(b.initialBuildChan)
 }
 
 func (b *bloomcache) DeleteBlock(k key.Key) error {
@@ -88,8 +95,14 @@ func (b *bloomcache) hasCached(k key.Key) (has bool, ok bool) {
 		// in case of invalid key is forwarded deeper
 		return false, false
 	}
-	if b.BloomActive() {
-		blr := b.bloom.HasTS([]byte(k))
+
+	b.bloomLock.RLock()
+	bloom := b.bloom
+	b.bloomLock.RUnlock()
+
+	// check if bloom filter is active
+	if bloom != nil {
+		blr := bloom.HasTS([]byte(k))
 		if blr == false { // not contained in bloom is only conclusive answer bloom gives
 			return false, true
 		}

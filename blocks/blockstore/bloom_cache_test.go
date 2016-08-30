@@ -31,7 +31,7 @@ func testBloomCached(bs GCBlockstore, ctx context.Context) (*bloomcache, error) 
 
 func TestReturnsErrorWhenSizeNegative(t *testing.T) {
 	bs := NewBlockstore(syncds.MutexWrap(ds.NewMapDatastore()))
-	_, err := bloomCached(bs, context.TODO(), -1, 1)
+	_, err := newBloomCachedBS(bs, context.TODO(), -1, 1)
 	if err == nil {
 		t.Fail()
 	}
@@ -50,7 +50,7 @@ func TestHasIsBloomCached(t *testing.T) {
 	}
 
 	select {
-	case <-cachedbs.rebuildChan:
+	case <-cachedbs.initialBuildChan:
 	case <-ctx.Done():
 		t.Fatalf("Timeout wating for rebuild: %d", cachedbs.bloom.ElementsAdded())
 	}
@@ -105,7 +105,7 @@ func BenchmarkEmptyBloomCache(b *testing.B) {
 	}
 
 	select {
-	case <-cachedbs.rebuildChan:
+	case <-cachedbs.initialBuildChan:
 	case <-ctx.Done():
 		b.Fatalf("Timeout wating for rebuild: %d", cachedbs.bloom.ElementsAdded())
 	}
