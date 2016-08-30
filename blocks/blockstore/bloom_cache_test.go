@@ -61,7 +61,13 @@ func TestHasIsBloomCached(t *testing.T) {
 	})
 
 	for i := 0; i < 1000; i++ {
-		cachedbs.Has(blocks.NewBlock([]byte(fmt.Sprintf("data: %d", i+2000))).Key())
+		has, err := cachedbs.Has(blocks.NewBlock([]byte(fmt.Sprintf("data: %d", i+2000))).Key())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if has {
+			t.Fatal("bloom responded true to block it doesn't contain")
+		}
 	}
 
 	if float64(cacheFails)/float64(1000) > float64(0.05) {
@@ -91,6 +97,46 @@ func TestHasIsBloomCached(t *testing.T) {
 
 	if err != nil {
 		t.Fatal("there should't be an error")
+	}
+}
+
+func TestAddWhileRebuilding(t *testing.T) {
+	cd := &callbackDatastore{f: func() {}, ds: ds.NewMapDatastore()}
+	bs := NewBlockstore(syncds.MutexWrap(cd))
+
+	for i := 0; i < 1000; i++ {
+		bs.Put(blocks.NewBlock([]byte(fmt.Sprintf("data: %d", i))))
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	cachedbs, err := testBloomCached(bs, ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Add second set of block while the filter is rebuilding
+	for i := 0; i < 1000; i++ {
+		cachedbs.Has(blocks.NewBlock([]byte(fmt.Sprintf("data: %d", i+2000))).Key())
+	}
+
+	select {
+	case <-cachedbs.initialBuildChan:
+	case <-ctx.Done():
+		t.Fatalf("Timeout wating for rebuild: %d", cachedbs.bloom.ElementsAdded())
+	}
+
+	cacheFails := 0
+	cd.SetFunc(func() {
+		cacheFails++
+	})
+
+	for i := 0; i < 1000; i++ {
+		has, err := cachedbs.Has(blocks.NewBlock([]byte(fmt.Sprintf("data: %d", i+2000))).Key())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !has {
+			t.Fatal("bloom responded has: false, to a block it should contain")
+		}
 	}
 }
 

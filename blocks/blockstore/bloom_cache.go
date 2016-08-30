@@ -45,9 +45,12 @@ func (b *bloomcache) invalidate() {
 }
 
 func (b *bloomcache) BloomActive() bool {
+	return b.getBloom() != nil
+}
+func (b *bloomcache) getBloom() *bloom.Bloom {
 	b.bloomLock.RLock()
 	defer b.bloomLock.RUnlock()
-	return b.bloom != nil
+	return b.bloom
 }
 
 func (b *bloomcache) build(bloom *bloom.Bloom, ctx context.Context) {
@@ -96,10 +99,7 @@ func (b *bloomcache) hasCached(k key.Key) (has bool, ok bool) {
 		return false, false
 	}
 
-	b.bloomLock.RLock()
-	bloom := b.bloom
-	b.bloomLock.RUnlock()
-
+	bloom := b.getBloom()
 	// check if bloom filter is active
 	if bloom != nil {
 		blr := bloom.HasTS([]byte(k))
@@ -133,7 +133,10 @@ func (b *bloomcache) Put(bl blocks.Block) error {
 
 	err := b.blockstore.Put(bl)
 	if err == nil {
-		b.bloom.AddTS([]byte(bl.Key()))
+		bloom := b.getBloom()
+		if bloom != nil {
+			b.bloom.AddTS([]byte(bl.Key()))
+		}
 	}
 	return err
 }
@@ -146,7 +149,8 @@ func (b *bloomcache) PutMany(bs []blocks.Block) error {
 		}
 	}
 	err := b.blockstore.PutMany(bs)
-	if err == nil {
+	bloom := b.getBloom()
+	if err == nil && bloom != nil {
 		for _, block := range bs {
 			b.bloom.AddTS([]byte(block.Key()))
 		}
