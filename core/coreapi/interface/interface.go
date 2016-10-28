@@ -13,6 +13,11 @@ import (
 // 	Version() CoreVersion
 // }
 
+type Object struct {
+	Links *[]Link
+	Data  Reader
+}
+
 type Link struct {
 	Name string
 	Size uint64
@@ -30,18 +35,18 @@ type UnixfsAPI interface {
 	Ls(context.Context, string) ([]*Link, error)
 }
 
-// type ObjectAPI interface {
-// 	New() (cid.Cid, Object)
-// 	Get(string) (Object, error)
-// 	Links(string) ([]*Link, error)
-// 	Data(string) (Reader, error)
-// 	Stat(string) (ObjectStat, error)
-// 	Put(Object) (cid.Cid, error)
-// 	SetData(string, Reader) (cid.Cid, error)
-// 	AppendData(string, Data) (cid.Cid, error)
-// 	AddLink(string, string, string) (cid.Cid, error)
-// 	RmLink(string, string) (cid.Cid, error)
-// }
+type ObjectAPI interface {
+	// 	New() (cid.Cid, Object)
+	Get(context.Context, string) (Object, error)
+	// 	Links(string) ([]*Link, error)
+	// 	Data(string) (Reader, error)
+	// 	Stat(string) (ObjectStat, error)
+	Put(context.Context, Object) (cid.Cid, error)
+	// 	SetData(string, Reader) (cid.Cid, error)
+	// 	AppendData(string, Data) (cid.Cid, error)
+	//  AddLink(string, string, string) (cid.Cid, error)
+	//  RmLink(string, string) (cid.Cid, error)
+}
 
 // type ObjectStat struct {
 // 	Cid            cid.Cid

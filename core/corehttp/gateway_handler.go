@@ -318,7 +318,23 @@ func (i *gatewayHandler) postHandler(ctx context.Context, w http.ResponseWriter,
 	http.Redirect(w, r, ipfsPathPrefix+k.String(), http.StatusCreated)
 }
 
-func (i *gatewayHandler) putHandler(w http.ResponseWriter, r *http.Request) {
+func (i *gatewayHandler) putHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	newnode, err := i.unixfsApi.Add(ctx, r.Body)
+	if err != nil {
+		internalWebError(w, err)
+		return
+	}
+
+	k, err := i.objectApi.AddLink(ctx)
+	if err != nil {
+		internalWebError(w, err)
+		return
+	}
+
+	return
+}
+
+func (i *gatewayHandler) oldPutHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO(cryptix): move me to ServeHTTP and pass into all handlers
 	ctx, cancel := context.WithCancel(i.node.Context())
 	defer cancel()
