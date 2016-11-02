@@ -254,23 +254,27 @@ func (adder *Adder) outputDirs(path string, fsn mfs.FSNode) error {
 // Add builds a merkledag from the a reader, pinning all objects to the local
 // datastore. Returns a key representing the root node.
 func Add(n *core.IpfsNode, r io.Reader) (string, error) {
-	return AddWithContext(n.Context(), n, r)
+	c, err := AddWithContext(n.Context(), n, r)
+	if err != nil {
+		return "", err
+	}
+	return c.String(), nil
 }
 
-func AddWithContext(ctx context.Context, n *core.IpfsNode, r io.Reader) (string, error) {
+func AddWithContext(ctx context.Context, n *core.IpfsNode, r io.Reader) (*cid.Cid, error) {
 	defer n.Blockstore.PinLock().Unlock()
 
 	fileAdder, err := NewAdder(n.Context(), n.Pinning, n.Blockstore, n.DAG)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	node, err := fileAdder.add(r)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return node.Cid().String(), nil
+	return node.Cid(), nil
 }
 
 // AddR recursively adds files in |path|.

@@ -22,11 +22,7 @@ func NewUnixfsAPI(n *core.IpfsNode) coreiface.UnixfsAPI {
 }
 
 func (api *UnixfsAPI) Add(ctx context.Context, r io.Reader) (*cid.Cid, error) {
-	k, err := coreunix.AddWithContext(ctx, api.node, r)
-	if err != nil {
-		return nil, err
-	}
-	return cid.Decode(k)
+	return coreunix.AddWithContext(ctx, api.node, r)
 }
 
 func (api *UnixfsAPI) Cat(ctx context.Context, p string) (coreiface.Reader, error) {
