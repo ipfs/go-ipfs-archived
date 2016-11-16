@@ -10,6 +10,19 @@ import (
 	ipld "gx/ipfs/QmUsVJ7AEnGyjX8YWnrwq9vmECVGwBQNAKPpgz5KSg8dcq/go-ipld-node"
 )
 
+type CoreAPI struct {
+	node *core.IpfsNode
+}
+
+func NewCoreAPI(n *core.IpfsNode) coreiface.CoreAPI {
+	api := &CoreAPI{n}
+	return api
+}
+
+func (api *CoreAPI) Unixfs() coreiface.UnixfsAPI {
+	return (*UnixfsAPI)(api)
+}
+
 func resolve(ctx context.Context, n *core.IpfsNode, p string) (ipld.Node, error) {
 	pp, err := path.ParsePath(p)
 	if err != nil {
