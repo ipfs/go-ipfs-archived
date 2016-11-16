@@ -18,26 +18,27 @@ type Reader interface {
 
 type CoreAPI interface {
 	Unixfs() UnixfsAPI
+	Object() ObjectAPI
 }
 
 type UnixfsAPI interface {
 	Add(context.Context, io.Reader) (*cid.Cid, error)
-	Cat(context.Context, string) (Reader, error)
-	Ls(context.Context, string) ([]*Link, error)
+	Cat(context.Context, *cid.Cid) (Reader, error)
+	Ls(context.Context, *cid.Cid) ([]*Link, error)
 }
 
-// type ObjectAPI interface {
-// 	New() (cid.Cid, Object)
-// 	Get(string) (Object, error)
-// 	Links(string) ([]*Link, error)
-// 	Data(string) (Reader, error)
-// 	Stat(string) (ObjectStat, error)
-// 	Put(Object) (cid.Cid, error)
-// 	SetData(string, Reader) (cid.Cid, error)
-// 	AppendData(string, Data) (cid.Cid, error)
-// 	AddLink(string, string, string) (cid.Cid, error)
-// 	RmLink(string, string) (cid.Cid, error)
-// }
+type ObjectAPI interface {
+	Get(context.Context, *cid.Cid) (*Object, error)
+	Put(context.Context, Object) (*cid.Cid, error)
+	AddLink(ctx context.Context, root *cid.Cid, path string, target *cid.Cid) (*cid.Cid, error)
+	RmLink(ctx context.Context, root *cid.Cid, path string) (*cid.Cid, error)
+	// New() (cid.Cid, Object)
+	// Links(string) ([]*Link, error)
+	// Data(string) (Reader, error)
+	// Stat(string) (ObjectStat, error)
+	// SetData(string, Reader) (cid.Cid, error)
+	// AppendData(string, Data) (cid.Cid, error)
+}
 
 // type ObjectStat struct {
 // 	Cid            cid.Cid

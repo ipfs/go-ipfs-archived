@@ -23,6 +23,10 @@ func (api *CoreAPI) Unixfs() coreiface.UnixfsAPI {
 	return (*UnixfsAPI)(api)
 }
 
+func (api *CoreAPI) Object() coreiface.ObjectAPI {
+	return (*ObjectAPI)(api)
+}
+
 func resolve(ctx context.Context, n *core.IpfsNode, p string) (ipld.Node, error) {
 	pp, err := path.ParsePath(p)
 	if err != nil {
