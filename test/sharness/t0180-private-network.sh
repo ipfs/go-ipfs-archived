@@ -34,9 +34,9 @@ pnet_key > $IPFS_PATH/swarm.key
 LIBP2P_FORCE_PNET=1 test_launch_ipfs_daemon
 
 check_file_fetch() {
-	node=$1
-	fhash=$2
-	fname=$3
+	node="$1"
+	fhash="$2"
+	fname="$3"
 
 	test_expect_success "can fetch file" '
 		ipfsi $node cat $fhash > fetch_out
@@ -47,8 +47,69 @@ check_file_fetch() {
 	'
 }
 
-test_expect_success "set up tcp testbed" '
-	iptb init -n 5 -p 0 -f --bootstrap=none
+test_expect_success "set up iptb testbed" '
+	iptb init -n 5 -p 0 -f --bootstrap=none  &&
+	iptb for-each ipfs config --json Addresses.Swarm  '"'"'["/ip4/127.0.0.1/tcp/0"]'"'"'
 '
+
+set_key() {
+	node="$1"
+	keyfile="$2"
+
+	cp "$keyfile" "$IPTB_ROOT/$node/swarm.key"
+}
+
+pnet_key > key1
+pnet_key > key2
+
+set_key 1 key1
+set_key 2 key1
+
+set_key 3 key2
+set_key 4 key2
+
+unset LIBP2P_FORCE_PNET
+
+test_expect_success "start nodes" '
+	iptb start [0-4]
+'
+
+test_expect_success "try connecting node in public network with priv networks" '
+	iptb connect [1-4] 0
+'
+
+test_expect_success "node 0 (public network) swarm is empty" '
+	ipfsi 0 swarm peers &&
+	[ $(ipfsi 0 swarm peers | wc -l) -eq 0 ]
+'
+
+test_expect_success "try connecting nodes in different private networks" '
+	iptb connect 2 3
+'
+
+test_expect_success "node 3 (pnet 2) swarm is empty" '
+	ipfsi 3 swarm peers &&
+	[ $(ipfsi 3 swarm peers | wc -l) -eq 0 ]
+'
+
+test_expect_success "connect nodes in the same pnet" '
+	iptb connect 1 2 &&
+	iptb connect 3 4
+'
+
+test_expect_success "nodes 1 and 2 have connected" '
+	ipfsi 2 swarm peers &&
+	[ $(ipfsi 2 swarm peers | wc -l) -eq 1 ]
+'
+
+test_expect_success "nodes 3 and 4 have connected" '
+	ipfsi 4 swarm peers &&
+	[ $(ipfsi 4 swarm peers | wc -l) -eq 1 ]
+'
+
+test_expect_success "stop testbed" '
+	iptb stop
+'
+
 
 test_done
