@@ -98,7 +98,7 @@ run_single_file_test() {
 	node1=$1
 	node2=$2
 
-	test_expect_success "add a file on node1" '
+	test_expect_success "add a file on node$node1" '
 		random 1000000 > filea &&
 		FILEA_HASH=$(ipfsi $node1 add -q filea)
 	'
