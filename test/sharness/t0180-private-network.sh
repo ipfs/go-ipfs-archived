@@ -33,20 +33,6 @@ pnet_key > $IPFS_PATH/swarm.key
 
 LIBP2P_FORCE_PNET=1 test_launch_ipfs_daemon
 
-check_file_fetch() {
-	node="$1"
-	fhash="$2"
-	fname="$3"
-
-	test_expect_success "can fetch file" '
-		ipfsi $node cat $fhash > fetch_out
-	'
-
-	test_expect_success "file looks good" '
-		test_cmp $fname fetch_out
-	'
-}
-
 test_expect_success "set up iptb testbed" '
 	iptb init -n 5 -p 0 -f --bootstrap=none  &&
 	iptb for-each ipfs config --json Addresses.Swarm  '"'"'["/ip4/127.0.0.1/tcp/0"]'"'"'
@@ -107,9 +93,43 @@ test_expect_success "nodes 3 and 4 have connected" '
 	[ $(ipfsi 4 swarm peers | wc -l) -eq 1 ]
 '
 
+
+run_single_file_test() {
+	node1=$1
+	node2=$2
+
+	test_expect_success "add a file on node1" '
+		random 1000000 > filea &&
+		FILEA_HASH=$(ipfsi $node1 add -q filea)
+	'
+
+	check_file_fetch $node1 $FILEA_HASH filea
+	check_file_fetch $node2 $FILEA_HASH filea
+}
+
+check_file_fetch() {
+	node="$1"
+	fhash="$2"
+	fname="$3"
+
+	test_expect_success "can fetch file" '
+		ipfsi $node cat $fhash > fetch_out
+	'
+
+	test_expect_success "file looks good" '
+		test_cmp $fname fetch_out
+	'
+}
+
+run_single_file_test 1 2
+run_single_file_test 2 1
+
+run_single_file_test 3 4
+run_single_file_test 4 3
+
+
 test_expect_success "stop testbed" '
 	iptb stop
 '
-
 
 test_done
