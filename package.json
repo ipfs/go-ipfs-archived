@@ -293,6 +293,18 @@
       "hash": "QmXuBJ7DR6k3rmUEKtvVMhwjmXDuJgXXPUt4LQXKBMsU93",
       "name": "go-os-helper",
       "version": "0.0.0"
+	},
+	{
+      "author": "libp2p",
+      "hash": "QmNVyG8xVHJwKmWKhDnWS2SwUDTUrFNkUmwS7xTasD9wgF",
+      "name": "go-libp2p-pnet",
+      "version": "0.3.0"
+    },
+    {
+      "author": "libp2p",
+      "hash": "QmdNTwe3Jms4TgT9kkGFCwLJK8DffoTY4oTZXKqC7tf3nr",
+      "name": "go-libp2p-interface-pnet",
+      "version": "0.1.0"
     }
   ],
   "gxVersion": "0.4.0",

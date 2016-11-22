@@ -37,6 +37,7 @@ import (
 	offroute "github.com/ipfs/go-ipfs/routing/offline"
 	ft "github.com/ipfs/go-ipfs/unixfs"
 
+	pnet "gx/ipfs/QmNVyG8xVHJwKmWKhDnWS2SwUDTUrFNkUmwS7xTasD9wgF/go-libp2p-pnet"
 	swarm "gx/ipfs/QmNafAGBU21iQmLudMT2z1kqgEGhjUrNoK9a3v4azd8ei4/go-libp2p-swarm"
 	goprocess "gx/ipfs/QmSF8fPo3jgVBAy8fpdjjYqgG87dkJgUprRBHRd2tmfgpP/goprocess"
 	mamask "gx/ipfs/QmSMZwvs3n4GBikZ7hKzT17c3bk65FmyZo2JqtJ16swqCv/multiaddr-filter"
@@ -57,6 +58,7 @@ import (
 	u "gx/ipfs/Qmb912gdngC1UWwTkhuW8knyRbcWeu5kqkxBpveLmW8bSr/go-ipfs-util"
 	ds "gx/ipfs/QmbzuUusHqaLLoNTDEVLcSF6vZDHZDLPC7p4bztRvvkXxU/go-datastore"
 	cid "gx/ipfs/QmcEcrBAMrwMyhSjXt4yfyPpzgSuV8HLHavnfmiKCSRqZU/go-cid"
+	ipnet "gx/ipfs/QmdNTwe3Jms4TgT9kkGFCwLJK8DffoTY4oTZXKqC7tf3nr/go-libp2p-interface-pnet"
 	peer "gx/ipfs/QmfMmLGoKzCHDN7cGgk64PJr4iipzidDRME8HABSJqvmhC/go-libp2p-peer"
 	ic "gx/ipfs/QmfWDLQjGjVe4fr5CoztYW2DYYjRysMJrFe1RCsXLPTf46/go-libp2p-crypto"
 )
@@ -159,7 +161,20 @@ func (n *IpfsNode) startOnlineServices(ctx context.Context, routingOption Routin
 		n.Reporter = metrics.NewBandwidthCounter()
 	}
 
-	peerhost, err := hostOption(ctx, n.Identity, n.Peerstore, n.Reporter, addrfilter)
+	swarmkey, err := n.Repo.SwarmKey()
+	if err != nil {
+		return err
+	}
+
+	var protec ipnet.Protector
+	if swarmkey != nil {
+		protec, err = pnet.NewProtector(swarmkey)
+		if err != nil {
+			return err
+		}
+	}
+
+	peerhost, err := hostOption(ctx, n.Identity, n.Peerstore, n.Reporter, addrfilter, protec)
 	if err != nil {
 		return err
 	}
@@ -616,15 +631,15 @@ func listenAddresses(cfg *config.Config) ([]ma.Multiaddr, error) {
 	return listen, nil
 }
 
-type HostOption func(ctx context.Context, id peer.ID, ps pstore.Peerstore, bwr metrics.Reporter, fs []*net.IPNet) (p2phost.Host, error)
+type HostOption func(ctx context.Context, id peer.ID, ps pstore.Peerstore, bwr metrics.Reporter, fs []*net.IPNet, protec ipnet.Protector) (p2phost.Host, error)
 
 var DefaultHostOption HostOption = constructPeerHost
 
 // isolates the complex initialization steps
-func constructPeerHost(ctx context.Context, id peer.ID, ps pstore.Peerstore, bwr metrics.Reporter, fs []*net.IPNet) (p2phost.Host, error) {
+func constructPeerHost(ctx context.Context, id peer.ID, ps pstore.Peerstore, bwr metrics.Reporter, fs []*net.IPNet, protec ipnet.Protector) (p2phost.Host, error) {
 
 	// no addresses to begin with. we'll start later.
-	network, err := swarm.NewNetwork(ctx, nil, id, ps, bwr)
+	network, err := swarm.NewNetworkWithProtector(ctx, nil, id, ps, protec, bwr)
 	if err != nil {
 		return nil, err
 	}
