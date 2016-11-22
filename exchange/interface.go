@@ -7,7 +7,7 @@ import (
 
 	blocks "github.com/ipfs/go-ipfs/blocks"
 
-	cid "gx/ipfs/QmcEcrBAMrwMyhSjXt4yfyPpzgSuV8HLHavnfmiKCSRqZU/go-cid"
+	cid "gx/ipfs/QmX4hxL9LDFVpYtNfBEBgVSynRGsooVf4F8nrvJiCZuxqq/go-cid"
 )
 
 // Any type that implements exchange.Interface may be used as an IPFS block

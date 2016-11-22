@@ -5,7 +5,7 @@ import (
 
 	bu "github.com/ipfs/go-ipfs/blocks/blocksutil"
 
-	cid "gx/ipfs/QmcEcrBAMrwMyhSjXt4yfyPpzgSuV8HLHavnfmiKCSRqZU/go-cid"
+	cid "gx/ipfs/QmX4hxL9LDFVpYtNfBEBgVSynRGsooVf4F8nrvJiCZuxqq/go-cid"
 )
 
 const (

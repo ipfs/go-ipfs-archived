@@ -3,7 +3,7 @@ package posinfo
 import (
 	"os"
 
-	node "gx/ipfs/QmUsVJ7AEnGyjX8YWnrwq9vmECVGwBQNAKPpgz5KSg8dcq/go-ipld-node"
+	node "gx/ipfs/QmNbpVWj1LwXR74hc3fuxBSmJoXtpgoKcnd1N7J6e88bRU/go-ipld-node"
 )
 
 type PosInfo struct {

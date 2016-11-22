@@ -7,9 +7,9 @@ import (
 
 	cmds "github.com/ipfs/go-ipfs/commands"
 
-	node "gx/ipfs/QmUsVJ7AEnGyjX8YWnrwq9vmECVGwBQNAKPpgz5KSg8dcq/go-ipld-node"
-	ipldcbor "gx/ipfs/QmVVfh9urmDSL1upPtAKKMxFUwW1R6hYr95uCuJUP8RhUu/go-ipld-cbor"
-	cid "gx/ipfs/QmcEcrBAMrwMyhSjXt4yfyPpzgSuV8HLHavnfmiKCSRqZU/go-cid"
+	node "gx/ipfs/QmNbpVWj1LwXR74hc3fuxBSmJoXtpgoKcnd1N7J6e88bRU/go-ipld-node"
+	ipldcbor "gx/ipfs/QmPozo9dT6jFhyFKzjuEj2EL3LUnjGfdDWdP6EUhDkUHDA/go-ipld-cbor"
+	cid "gx/ipfs/QmX4hxL9LDFVpYtNfBEBgVSynRGsooVf4F8nrvJiCZuxqq/go-cid"
 )
 
 var DagCmd = &cmds.Command{
