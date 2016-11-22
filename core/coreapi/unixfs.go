@@ -21,8 +21,8 @@ func (api *UnixfsAPI) Add(ctx context.Context, r io.Reader) (*cid.Cid, error) {
 	return cid.Decode(k)
 }
 
-func (api *UnixfsAPI) Cat(ctx context.Context, p string) (coreiface.Reader, error) {
-	dagnode, err := resolve(ctx, api.node, p)
+func (api *UnixfsAPI) Cat(ctx context.Context, ref coreiface.Ref) (coreiface.Reader, error) {
+	dagnode, err := resolve(ctx, api.node, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +36,8 @@ func (api *UnixfsAPI) Cat(ctx context.Context, p string) (coreiface.Reader, erro
 	return r, nil
 }
 
-func (api *UnixfsAPI) Ls(ctx context.Context, p string) ([]*coreiface.Link, error) {
-	dagnode, err := resolve(ctx, api.node, p)
+func (api *UnixfsAPI) Ls(ctx context.Context, ref coreiface.Ref) ([]*coreiface.Link, error) {
+	dagnode, err := resolve(ctx, api.node, ref)
 	if err != nil {
 		return nil, err
 	}
