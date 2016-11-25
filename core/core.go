@@ -173,7 +173,7 @@ func (n *IpfsNode) startOnlineServices(ctx context.Context, routingOption Routin
 		if err != nil {
 			return err
 		}
-		n.PNetFingerpint = make([]byte, 16) //protec.Fingerprint()
+		n.PNetFingerpint = make([]byte, 16) //TODO: protec.Fingerprint()
 	}
 
 	peerhost, err := hostOption(ctx, n.Identity, n.Peerstore, n.Reporter, addrfilter, protec)
