@@ -1,9 +1,9 @@
 # util functions
 ifeq ($(OS),Windows_NT)
-	WINDOWS:=1
-	exe? :=.exe # windows compat
+	WINDOWS :=1
+	?exe :=.exe # windows compat
 else
-	exe? :=
+	?exe :=
 endif
 
 space:=

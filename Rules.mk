@@ -1,9 +1,10 @@
+TGT_BIN:=
+CLEAN:=
+TEST:=
 include mk/util.mk
 include mk/golang.mk
 
 
-TGT_BIN:=
-CLEAN:=
 
 all: help
 
@@ -18,8 +19,6 @@ clean:
 
 .PHONY: test
 test: $(TEST)
-
-
 
 dir := cmd/ipfs
 include $(dir)/Rules.mk
