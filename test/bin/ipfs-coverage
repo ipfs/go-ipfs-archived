@@ -1,0 +1,10 @@
+#!/bin/bash
+T=$(mktemp)
+
+ipfs.test -test.run "^TestRunMain$" -test.coverprofile="$(mktemp ${COVER_FMT:?Needs to set COVER_FMT})" -- "$@" | sed '$d' | sed '$d' > "$T"
+
+ECODE="$(tail -n1 "$T")"
+
+sed '$d' "$T"
+
+exit "$ECODE"
