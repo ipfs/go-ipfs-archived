@@ -16,5 +16,5 @@ print-%:
 	@echo $*=$($*)
 
 # phony target that will mean that recipe is always exectued
-.PHONY: ALWAYS
 ALWAYS:
+.PHONY: ALWAYS

@@ -10,27 +10,25 @@ go-curr-pkg-tgt=$(d)/$(call go-main-name,$(d))
 go-flags-with-tags=$(GOFLAGS)$(if $(GOTAGS), -tags $(call join-with,$(comma),$(GOTAGS)))
 
 define go-build=
-go build $(call go-flag-from-tags) -o "$@" "$(call go-pkg-name,$<)"
+go build $(go-flag-from-tags) -o "$@" "$(call go-pkg-name,$<)"
 endef
 
-.PHONY: test_go_short
 test_go_short: GOTFLAGS += -test.short
 test_go_short: test_go_expensive
+.PHONY: test_go_short
 
-.PHONY: test_go_race
 test_go_race: GOTFLAGS += -race
 test_go_race: test_go_expensive
+.PHONY: test_go_race
 
-TEST_GO := test_go_expensive
-.PHONY: test_go_expensive
+TEST_GO += test_go_expensive
 test_go_expensive:
-	go test $(call go-flags-with-tags) $(GOTFLAGS) ./...
+	go test $(go-flags-with-tags) $(GOTFLAGS) ./...
+.PHONY: test_go_expensive
 
 TEST_GO += test_go_fmt
-.PHONY: test_go_fmt
 test_go_fmt:
 	bin/test-go-fmt
+.PHONY: test_go_fmt
 
 TEST += $(TEST_GO)
-
-
