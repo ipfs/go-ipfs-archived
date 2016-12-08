@@ -1,15 +1,12 @@
-TGT_BIN:=
-CLEAN:=
-TEST:=
 include mk/util.mk
 include mk/golang.mk
 
-
-
+.PHONY: all
 all: help
 
 .PHONY: build
 build: targets
+
 .PHONY: targets
 targets: $(TGT_BIN)
 
@@ -20,6 +17,9 @@ clean:
 .PHONY: test
 test: $(TEST)
 
+# -------------------- #
+#       sub-files      #
+# -------------------- #
 dir := cmd/ipfs
 include $(dir)/Rules.mk
 

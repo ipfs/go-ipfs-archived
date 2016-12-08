@@ -1,5 +1,4 @@
 # golang utilities
-
 GOTAGS ?=
 GOFLAGS ?=
 GOTFLAGS ?=
@@ -14,15 +13,17 @@ define go-build=
 go build $(call go-flag-from-tags) -o "$@" "$(call go-pkg-name,$<)"
 endef
 
-
 .PHONY: test_go_short
 test_go_short: GOTFLAGS += -test.short
+test_go_short: test_go_expensive
+
 .PHONY: test_go_race
 test_go_race: GOTFLAGS += -race
+test_go_race: test_go_expensive
 
 TEST_GO := test_go_expensive
 .PHONY: test_go_expensive
-test_go_short test_go_race test_go_expensive:
+test_go_expensive:
 	go test $(call go-flags-with-tags) $(GOTFLAGS) ./...
 
 TEST_GO += test_go_fmt
