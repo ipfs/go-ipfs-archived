@@ -12,7 +12,8 @@ comma:=,
 join-with=$(subst $(space),$1,$(strip $2))
 
 # debug target, prints varaible. Example: `make print-GOFLAGS`
-print-%: ; @echo $*=$($*)
+print-%:
+	@echo $*=$($*)
 
 # phony target that will mean that recipe is always exectued
 .PHONY: ALWAYS
