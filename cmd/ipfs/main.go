@@ -1,4 +1,3 @@
-// cmd/ipfs implements the primary CLI binary for ipfs
 package main
 
 import (
@@ -64,6 +63,10 @@ type cmdInvocation struct {
 // - output the response
 // - if anything fails, print error, maybe with help
 func main() {
+	os.Exit(mainRet())
+}
+
+func mainRet() int {
 	rand.Seed(time.Now().UnixNano())
 	ctx := logging.ContextWithLoggable(context.Background(), loggables.Uuid("session"))
 	var err error
@@ -79,7 +82,7 @@ func main() {
 	stopFunc, err := profileIfEnabled()
 	if err != nil {
 		printErr(err)
-		os.Exit(1)
+		return 1
 	}
 	defer stopFunc() // to be executed as late as possible
 
@@ -104,7 +107,7 @@ func main() {
 	if len(os.Args) == 2 {
 		if os.Args[1] == "help" {
 			printHelp(false, os.Stdout)
-			os.Exit(0)
+			return 0
 		} else if os.Args[1] == "--version" {
 			os.Args[1] = "version"
 		}
@@ -119,11 +122,11 @@ func main() {
 		longH, shortH, err := invoc.requestedHelp()
 		if err != nil {
 			printErr(err)
-			os.Exit(1)
+			return 1
 		}
 		if longH || shortH {
 			printHelp(longH, os.Stdout)
-			os.Exit(0)
+			return 0
 		}
 	}
 
@@ -138,7 +141,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "\n")
 			printHelp(false, os.Stderr)
 		}
-		os.Exit(1)
+		return 1
 	}
 
 	// here we handle the cases where
@@ -146,7 +149,7 @@ func main() {
 	// - the main command is invoked.
 	if invoc.cmd == nil || invoc.cmd.Run == nil {
 		printHelp(false, os.Stdout)
-		os.Exit(0)
+		return 0
 	}
 
 	// ok, finally, run the command invocation.
@@ -161,16 +164,16 @@ func main() {
 		if isClientError(err) {
 			printMetaHelp(os.Stderr)
 		}
-		os.Exit(1)
+		return 1
 	}
 
 	// everything went better than expected :)
 	_, err = io.Copy(os.Stdout, output)
 	if err != nil {
 		printErr(err)
-
-		os.Exit(1)
+		return 1
 	}
+	return 0
 }
 
 func (i *cmdInvocation) Run(ctx context.Context) (output io.Reader, err error) {
