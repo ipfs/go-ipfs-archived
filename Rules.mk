@@ -15,6 +15,16 @@ include $(dir)/Rules.mk
 dir := cmd/ipfs
 include $(dir)/Rules.mk
 
+dir := namesys/pb
+include $(dir)/Rules.mk
+
+# -------------------- #
+#   universal rules    #
+# -------------------- #
+
+%.pb.go: %.proto
+	$(PROTOC)
+
 # -------------------- #
 #     core targets     #
 # -------------------- #
