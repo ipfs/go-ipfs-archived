@@ -1,4 +1,7 @@
 # golang utilities
+GO_MIN_VERSION = 1.7
+
+# pre-definitions
 GOTAGS ?=
 GOFLAGS ?=
 GOTFLAGS ?=
@@ -25,14 +28,22 @@ test_go_race: GOTFLAGS += -race
 test_go_race: test_go_expensive
 .PHONY: test_go_race
 
-TEST_GO += test_go_expensive
 test_go_expensive:
 	go test $(go-flags-with-tags) $(GOTFLAGS) ./...
 .PHONY: test_go_expensive
+TEST_GO += test_go_expensive
 
-TEST_GO += test_go_fmt
 test_go_fmt:
 	bin/test-go-fmt
 .PHONY: test_go_fmt
+TEST_GO += test_go_fmt
+
+test_go: $(TEST_GO)
+
+check_go_version: 
+	@bin/check_go_version $(IPFS_MIN_GO_VERSION)
+.PHONY: check_go_version
+CHECK_GO += check_go_version
+
 
 TEST += $(TEST_GO)
