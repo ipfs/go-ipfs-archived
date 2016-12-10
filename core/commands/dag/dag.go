@@ -1,6 +1,7 @@
 package dagcmd
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -25,8 +26,10 @@ to deprecate and replace the existing 'ipfs object' command moving forward.
 		`,
 	},
 	Subcommands: map[string]*cmds.Command{
-		"put": DagPutCmd,
-		"get": DagGetCmd,
+		"put":     DagPutCmd,
+		"get":     DagGetCmd,
+		"resolve": DagResolveCmd,
+		"tree":    DagTreeCmd,
 	},
 }
 
@@ -155,6 +158,101 @@ var DagGetCmd = &cmds.Command{
 
 		res.SetOutput(out)
 	},
+}
+
+var DagResolveCmd = &cmds.Command{
+	Helptext: cmds.HelpText{
+		Tagline: "Resolve a path through an ipld node.",
+		ShortDescription: `
+'ipfs dag resolve' fetches a dag node from ipfs and resolves a path through it.
+`,
+	},
+	Arguments: []cmds.Argument{
+		cmds.StringArg("path", true, false, "The path to resolve."),
+	},
+	Run: func(req cmds.Request, res cmds.Response) {
+		n, err := req.InvocContext().GetNode()
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		p, err := path.ParsePath(req.Arguments()[0])
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		obj, err := n.Resolver.ResolvePath(req.Context(), p)
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		res.SetOutput(obj)
+	},
+}
+
+var DagTreeCmd = &cmds.Command{
+	Helptext: cmds.HelpText{
+		Tagline: "Enumerate paths within a given ipld node.",
+		ShortDescription: `
+'ipfs dag tree' lists paths through the given ipld node
+`,
+	},
+	Arguments: []cmds.Argument{
+		cmds.StringArg("object", true, false, "The object to list paths of."),
+	},
+	Options: []cmds.Option{
+		cmds.IntOption("depth", "d", "depth of listing (-1 for no limit)").Default(-1),
+		cmds.StringOption("path", "path within the given object to list from"),
+	},
+	Run: func(req cmds.Request, res cmds.Response) {
+		n, err := req.InvocContext().GetNode()
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		p, err := path.ParsePath(req.Arguments()[0])
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		obj, err := n.Resolver.ResolvePath(req.Context(), p)
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		path, _, _ := req.Option("path").String()
+		depth, _, err := req.Option("depth").Int()
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		res.SetOutput(obj.Tree(path, depth))
+	},
+	Type: []string{},
+	Marshalers: cmds.MarshalerMap{
+		cmds.Text: func(res cmds.Response) (io.Reader, error) {
+			paths, ok := res.Output().([]string)
+			if !ok {
+				return nil, fmt.Errorf("wrong command response output type")
+			}
+			buf := new(bytes.Buffer)
+			for _, s := range paths {
+				fmt.Fprintln(buf, s)
+			}
+			return buf, nil
+		},
+	},
+}
+
+type treeList struct {
+	Paths []string
 }
 
 func convertJsonToType(r io.Reader, format string) (node.Node, error) {
