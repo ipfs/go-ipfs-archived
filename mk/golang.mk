@@ -8,7 +8,9 @@ GOTFLAGS ?=
 
 GOFLAGS += -i # install packages to $GOPATH/pkg/ for major build speed-up
 
-GODEPS :=
+DEPS_GO :=
+TEST_GO :=
+CHECK_GO :=
 
 go-pkg-name=$(shell go list ./$(1))
 go-main-name=$(notdir $(call go-pkg-name,$(1)))$(?exe)
@@ -41,9 +43,8 @@ TEST_GO += test_go_fmt
 test_go: $(TEST_GO)
 
 check_go_version: 
-	@bin/check_go_version $(IPFS_MIN_GO_VERSION)
+	bin/check_go_version $(GO_MIN_VERSION)
 .PHONY: check_go_version
 CHECK_GO += check_go_version
-
 
 TEST += $(TEST_GO)

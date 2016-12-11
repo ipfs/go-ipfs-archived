@@ -9,6 +9,8 @@ TGTS_$(d) := $(d)/gx $(d)/gx-go
 CLEAN += $(TGTS_$(d))
 DISTCLEAN += $(wildcard $(d)/gx-v*) $(wildcard $(d)/gx-go-v*)
 
+PATH := $(d):$(PATH)
+
 $(TGTS_$(d)):
 	rm -f $@
 	ln -s $(notdir $^) $@
