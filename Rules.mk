@@ -13,6 +13,9 @@ include mk/gx.mk
 dir := bin
 include $(dir)/Rules.mk
 
+dir := test
+include $(dir)/Rules.mk
+
 dir := cmd/ipfs
 include $(dir)/Rules.mk
 
