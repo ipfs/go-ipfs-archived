@@ -26,9 +26,14 @@ TGTS_GX_$(d) := hang-fds iptb
 TGTS_GX_$(d) := $(addprefix $(d)/,$(TGTS_GX_$(d)))
 
 $(TGTS_GX_$(d)):
-	go build $(go-flags-with-tags) -o "$@" "gx/ipfs/$(shell gx deps find $(notdir $@))/$(notdir $@)"
+	go build $(go-flags-with-tags) -o "$@" "$(call gx-path,$(notdir $@))"
 
 TGTS_$(d) += $(TGTS_GX_$(d))
+
+# multihash is special
+$(d)/multihash:
+	go build $(go-flags-with-tags) -o "$@" "gx/ipfs/$(shell gx deps find go-multihash)/go-multihash/multihash"
+$(TGTS_$(d)) += $(d)/multihash
 
 $(TGTS_$(d)): $$(DEPS_GO)
 
