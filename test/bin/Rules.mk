@@ -37,6 +37,8 @@ $(TGTS_$(d)) += $(d)/multihash
 
 $(TGTS_$(d)): $$(DEPS_GO)
 
+CLEAN += $(TGTS_$(d))
+
 PATH := $(d):$(PATH)
 
 include mk/footer.mk

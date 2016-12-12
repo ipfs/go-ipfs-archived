@@ -42,7 +42,7 @@ TEST_GO += test_go_fmt
 
 test_go: $(TEST_GO)
 
-check_go_version: 
+check_go_version:
 	bin/check_go_version $(GO_MIN_VERSION)
 .PHONY: check_go_version
 CHECK_GO += check_go_version

@@ -10,7 +10,10 @@
 
 # add current directory to path, for ipfs tool.
 BIN=$(cd .. && echo `pwd`/bin)
-PATH=${BIN}:${PATH}
+BIN2=$(cd ../.. && echo `pwd`/cmd/ipfs)
+PATH=${BIN2}:${BIN}:${PATH}
+echo $(realpath $0)
+echo $BIN2
 
 # set sharness verbosity. we set the env var directly as
 # it's too late to pass in --verbose, and --verbose is harder
@@ -18,7 +21,7 @@ PATH=${BIN}:${PATH}
 test "$TEST_VERBOSE" = 1 && verbose=t
 
 # assert the `ipfs` we're using is the right one.
-if test `which ipfs` != ${BIN}/ipfs; then
+if test `which ipfs` != ${BIN2}/ipfs; then
 	echo >&2 "Cannot find the tests' local ipfs tool."
 	echo >&2 "Please check test and ipfs tool installation."
 	exit 1
