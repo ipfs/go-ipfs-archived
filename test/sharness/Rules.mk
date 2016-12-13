@@ -1,6 +1,6 @@
 include mk/header.mk
 
-T_$(d) = $(sort $(wildcard t[0-9][0-9][0-9][0-9]-*.sh))
+T_$(d) = $(sort $(wildcard $(d)/t[0-9][0-9][0-9][0-9]-*.sh))
 
 DEPS_$(d) = test/bin/random test/bin/multihash test/bin/pollEndpoint \
 	   test/bin/iptb test/bin/go-sleep test/bin/random-files \
@@ -9,18 +9,16 @@ DEPS_$(d) += cmd/ipfs/ipfs
 
 $(T_$(d)): $(DEPS_$(d))
 	@echo "*** $@ ***"
-	./$@
+	(cd $(dir $@) && ./$(notdir $@)) 2>&1
 .PHONY: $(T_$(d))
 
+
+sharness: $(T_$(d))
+.PHONY: sharness
 
 
 
 sharness_deps: $(DEPS_$(d))
-
-
-
-
-$(d)/chain.mk:
 
 
 
