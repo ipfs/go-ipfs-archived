@@ -28,7 +28,7 @@ test_go_race: GOTFLAGS += -race
 test_go_race: test_go_expensive
 .PHONY: test_go_race
 
-test_go_expensive:
+test_go_expensive: $$(DEPS_GO)
 	go test $(go-flags-with-tags) $(GOTFLAGS) ./...
 .PHONY: test_go_expensive
 TEST_GO += test_go_expensive
