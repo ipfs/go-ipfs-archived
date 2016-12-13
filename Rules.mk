@@ -71,4 +71,5 @@ deps: gx-deps
 install: $$(GODEPS)
 	go install $(go-flags-with-tags) ./cmd/ipfs
 
-
+# TEMP
+coverage: test
