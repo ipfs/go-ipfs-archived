@@ -65,4 +65,7 @@ distclean: clean
 test: $(TEST)
 .PHONY: test
 
+deps: gx-deps
+.PHONY: deps
+
 
