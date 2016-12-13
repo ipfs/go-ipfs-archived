@@ -72,4 +72,4 @@ install: $$(DEPS_GO)
 	go install $(go-flags-with-tags) ./cmd/ipfs
 
 # TEMP
-coverage: test
+coverage: test_go_expensive
