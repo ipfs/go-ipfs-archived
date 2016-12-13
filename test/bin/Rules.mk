@@ -39,6 +39,6 @@ $(TGTS_$(d)): $$(DEPS_GO)
 
 CLEAN += $(TGTS_$(d))
 
-PATH := $(d):$(PATH)
+PATH := $(realpath $(d)):$(PATH)
 
 include mk/footer.mk

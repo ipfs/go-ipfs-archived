@@ -1,8 +1,0 @@
-# General tools
-
-PROTOC = protoc --gogo_out=. --proto_path=.:/usr/local/opt/protobuf/include:$(dir $@) $<
-
-# enable second expansion
-.SECONDEXPANSION:
-
-include Rules.mk
