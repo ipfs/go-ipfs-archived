@@ -1,5 +1,35 @@
 # go-ipfs changelog
 
+### 0.4.5 - YYYY-MM-DD
+
+- Misc
+  - Disable GC checks on `ipfs cat` command. It's currently not very useful or reliable,
+    and will possibly be reintroduced in the upcoming GC rework. (@whyrusleeping, #3100)
+
+- New Features
+  - Add `ipfs bitswap ledger` command. (@thomas-gardner, ipfs/go-ipfs#2852)
+  - Add `ipfs block rm` command. (@kevina, #2962)
+  - Add `Reprovider.Interval` config option for controlling IPNS reprovide intervals. (@whyrusleeping, #3101)
+- Bugfixes
+  - Fix relative seeking in large files. (@Kubuxu, #3095)
+
+- Testing
+  - Fix `test_fsh()` quoting. (@chriscool, ipfs/go-ipfs#3085)
+  - Improve test coverage in `blocks` and `unixfs` packages. (@Kubuxu, #3074, ipfs/go-ipfs#3084, #3086, ipfs/go-ipfs#3090, #3096)
+
+- Documentation
+  - Add notes about building on less common systems. (@whyrusleeping, #3051)
+  - Improve documentation of `ipfs ls` and `ipfs files ls` commands. (@dokterbob, ipfs/go-ipfs#3083)
+  - Fix domain name in `ipfs dns` help text. (@kevinsimper, ipfs/go-ipfs#3087)
+  - Fix various grammatical issues. (@RichardLitt, @JesseWeinstein, ipfs/go-ipfs#3088, ipfs/go-ipfs#3041)
+  - Add conventions for naming of Git branches. (@whyrusleeping, #3035)
+
+- General Codebase
+  - Manage go-is-domain package with Gx. (@Kubuxu, ipfs/go-ipfs#3077)
+  - Fix double-output issue in `bin/dist_get` script. (@MrSparc, ipfs/go-ipfs#3079)
+  - Clean up Makefiles. (@Kubuxu, ipfs/go-ipfs#2999)
+
+
 ### 0.4.4 - 2016-10-11
 
 This release contains an important hotfix for a bug we discovered in how pinning works.

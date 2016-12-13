@@ -1,0 +1,206 @@
+Reflects ipfs/go-ipfs@75d48f3957bbc69cf8d6367eafc1efbeb52f1e5a
+
+Notable changes
+- IPLD and CIDs
+  - [ ] Rework go-ipfs to use content IDs version 0                -- ipfs/go-ipfs#3187
+  - [ ] The conquest of El Cid, Pt. 2                -- ipfs/go-ipfs#3290
+  - [ ] Turn merkledag.Node into an interface                              -- ipfs/go-ipfs#3301
+  - [ ] Implement cbor ipld nodes and a first pass at the 'dag' command                -- ipfs/go-ipfs#3325
+  - [ ] allow cid format selection in block put command                -- ipfs/go-ipfs#3324
+  - [ ] cmd/block: add selection of multihash parameters to block put command                -- ipfs/go-ipfs#3483
+  - [ ] bitswap: protocol extension to handle cids                -- ipfs/go-ipfs#3297
+  - [ ] Add dag and stat to command help info                -- ipfs/go-ipfs#3422
+  - [ ] dag get should be a read only command                -- ipfs/go-ipfs#3499
+  - [ ] dag/get: accept paths and not just cids                -- ipfs/go-ipfs#3517
+  - [ ] ds-help: add helper functions to convert from Cid to DsKey and the reverse                -- ipfs/go-ipfs#3310
+  - [ ] Issue #3419: Do not recursively resolve DAG just to obtain a CID                -- ipfs/go-ipfs#3420
+  - [ ] merkledag: retain cid types when roundtripping through a ProtoNode                -- ipfs/go-ipfs#3443
+- Raw Nodes
+  - [ ] Implement 'Raw Node' node type                -- ipfs/go-ipfs#3307
+  - [ ] merkledag: optimize DagService GetLinks for Raw Nodes.                -- ipfs/go-ipfs#3351
+  - [ ] Fix panic in dagreader with raw nodes                -- ipfs/go-ipfs#3403
+- Experimental PubSub
+  - [ ] Add a very basic many to many pubsub                -- ipfs/go-ipfs#3202
+  - [ ] Send empty struct to pubsub cmd output to flush                -- ipfs/go-ipfs#3416
+  - [ ] cmd/pubsub: fix peers command topic filtering                -- ipfs/go-ipfs#3484
+  - [ ] add sharness test for pubsub                          -- ipfs/go-ipfs#3432
+- Core API
+  - [ ] gateway: use core api for serving GET/HEAD/POST                -- ipfs/go-ipfs#3244
+
+changes
+- [ ] gateway: disable Suborigins as it conflicts the spec                -- ipfs/go-ipfs#3519
+- [ ] blockstore: rename RuntimeHashing to HashOnRead                -- ipfs/go-ipfs#3143
+- [ ] ipfs/cat: disable auto-gc check                -- ipfs/go-ipfs#3100
+- [ ] Revert Add Defaults to `ipfs add` / Fix default logic of `--progress` option                -- ipfs/go-ipfs#3464
+
+improvements
+- [ ] bitswap: add `ledger` subcommand                -- ipfs/go-ipfs#2852
+- [ ] Add "ipfs block rm" command.                -- ipfs/go-ipfs#2962
+- [ ] add config option to disable bandwidth metrics                -- ipfs/go-ipfs#3381
+- [ ] add experimental dht client mode flag                -- ipfs/go-ipfs#3269
+- [ ] reprovider: add config option to set reprovide interval                -- ipfs/go-ipfs#3101
+- [ ] cmds: implement ipfs dht provide command                -- ipfs/go-ipfs#3106
+- [ ] allow listing of streams to connected peers                -- ipfs/go-ipfs#3352
+- [ ] add option to enable go-multiplex experiment                -- ipfs/go-ipfs#3447
+- [ ] basic keystore implementation                -- ipfs/go-ipfs#3472
+- [ ] ipfs/add: make --local flag not write out providers                -- ipfs/go-ipfs#3102
+- [ ] dont buffer entire input for tar adds                               -- ipfs/go-ipfs#3334
+- [ ] gateway: degrade error in gateway to log to reduce noise                -- ipfs/go-ipfs#2971
+- [ ] datastore: blockstore should retry when it encounters temp errors                -- ipfs/go-ipfs#3091
+- [ ] Adder: Don't hold the PinLock when not pinning.                -- ipfs/go-ipfs#3222
+- [ ] cmd: validate repo/api file and print nicer error message                -- ipfs/go-ipfs#3219
+- [ ] no longer hard code gomaxprocs                               -- ipfs/go-ipfs#3357
+- [ ] bash_completion: Add a couple missing commands                -- ipfs/go-ipfs#3369
+- [ ] Updated Bash complete script                                           -- ipfs/go-ipfs#3377
+- [ ] blockstore: fix TODO and avoid calling ds.NewKey                -- ipfs/go-ipfs#3379
+- [ ] blockstore: remove expensive debug statement in AllKeysChan                -- ipfs/go-ipfs#3384
+- [ ] Remove GC timeout, fix GC tests                               -- ipfs/go-ipfs#3494
+- [ ] merkledag: add a concurrency limit to merkledag fetch graph                -- ipfs/go-ipfs#3495
+- [ ] "block rm": make channel large enough to avoid blocking                -- ipfs/go-ipfs#3418
+- [ ] namesys: add entry to DHT cache after publish                -- ipfs/go-ipfs#3501
+- [ ] namesys: fix case where there is no cache                -- ipfs/go-ipfs#3509
+
+bitswap
+- [ ] bitswap: don't re-provide blocks we've provided very recently                -- ipfs/go-ipfs#3105
+- [ ] bitswap: add a deadline to sendmsg calls                     -- ipfs/go-ipfs#3445
+- [ ] cleanup bitswap and handle message send failure slightly better                -- ipfs/go-ipfs#3408
+- [ ] bitswap: increase wantlist resend delay to one minute                -- ipfs/go-ipfs#3448
+- [ ] bitswap: add wantlist fullness to protobuf messages                -- ipfs/go-ipfs#3461
+- [ ] update message.proto with comments                                       -- ipfs/go-ipfs#3476
+- [ ] only pass keys down newBlocks chan in bitswap                          -- ipfs/go-ipfs#3271
+- [ ] Fix minor typo in bitswap debug logging                            -- ipfs/go-ipfs#3178
+
+fixes
+- [ ] gateway: fix --writable flag :|                               -- ipfs/go-ipfs#3206
+- [ ] unixfs: fix relative seek not expanding file properly                 -- ipfs/go-ipfs#3095
+- [ ] use correct protocol names for ipfs services                -- ipfs/go-ipfs#3132
+- [ ] dht: add missing protocol ID to newStream call                -- ipfs/go-ipfs#3203
+- [ ] namesys: return right after errors                               -- ipfs/go-ipfs#3345
+- [ ] fuse: make osxfuse check config check more permissive                -- ipfs/go-ipfs#3098
+- [ ] fuse: Parse OSX fuse version properly                               -- ipfs/go-ipfs#3413
+- [ ] Fixes nc on macOS not closing socket when the stdin sends EOF                -- ipfs/go-ipfs#3515
+- [ ] commands: fix opt.Description panic when desc was empty                -- ipfs/go-ipfs#3521
+- [ ] Fixes #3133: Properly handle release candidates in version comparison                -- ipfs/go-ipfs#3136
+- [ ] "block rm": move core functionally into blockstore_util package                -- ipfs/go-ipfs#3225
+- [ ] Don't drop error in readStreamedJson.                               -- ipfs/go-ipfs#3276
+- [ ] cmd/ipfs: error out on invalid routing option                -- ipfs/go-ipfs#3482
+- [ ] respect contexts when returning diagnostics responses                -- ipfs/go-ipfs#3353
+- [ ] fix formatting on error call                                       -- ipfs/go-ipfs#3435
+- [ ] merkledag: fix json marshalling of pbnode                -- ipfs/go-ipfs#3507
+
+general changes and refactorings
+- [ ] pin: use separate dagservice for storing pinsets                -- ipfs/go-ipfs#3103
+- [ ] cli: refactor to expose argument parsing functionality                -- ipfs/go-ipfs#3308
+- [ ] Revert "http api: makes sure header is sent even when r is not ready …                -- ipfs/go-ipfs#3366
+- [ ] Create a FilestoreNode object to carry PosInfo                -- ipfs/go-ipfs#3314
+- [ ] swarm/peers: print 'n/a' instead of zero latency                -- ipfs/go-ipfs#3491
+- [ ] blockstore: fix PutMany with cache logic                            -- ipfs/go-ipfs#3162
+- [ ] Add DAGService.GetLinks() method and use it in the GC and elsewhere.                -- ipfs/go-ipfs#3255
+- [ ] Create a write-through block service                            -- ipfs/go-ipfs#3294
+- [ ] make path resolver no longer require whole node for construction                -- ipfs/go-ipfs#3321
+- [ ] Distinguish between Offline and Local Mode.                            -- ipfs/go-ipfs#3259
+- [ ] Separate out the G.C. Locking from the Blockstore interface.                -- ipfs/go-ipfs#3348
+- [ ] ds-help: avoid unnecessary allocs when posssible and make use of RawKey                -- ipfs/go-ipfs#3407
+- [ ] Use NextSync method in Datastore                                       -- ipfs/go-ipfs#3386
+- [ ] Switch unixfs.Metadata.MimeType to optional                     -- ipfs/go-ipfs#3458
+
+bsd
+- [ ] dist_get: Explicitly specify the input file to tar with "-f -"                -- ipfs/go-ipfs#3264
+- [ ] ulimit: Tune resource limits on BSDs                                           -- ipfs/go-ipfs#3374
+- [ ] ulimit: handle freebsd ulimit code separately from the rest of the un…                -- ipfs/go-ipfs#3450
+
+metrics
+- [ ] metrics: introduce go-metrics-interface                      -- ipfs/go-ipfs#3189
+- [ ] Fix metrics injection                                           -- ipfs/go-ipfs#3315
+
+misc
+- [ ] bump go requirement to 1.7                -- ipfs/go-ipfs#3111
+- [ ] Merge 0.4.3 release candidate changes back into master                -- ipfs/go-ipfs#3248
+- [ ] changelog: update for 0.4.3                -- ipfs/go-ipfs#3249
+- [ ] changelog: fix 0.4.3-rc dates                -- ipfs/go-ipfs#3358
+- [ ] changelog: add 0.4.4                -- ipfs/go-ipfs#3497
+- [ ] bump dev version to 0.4.5                -- ipfs/go-ipfs#3298
+- [ ] assets: add security@ipfs.io GPG key                -- ipfs/go-ipfs#2997
+- [ ] Change LICENSE year                -- ipfs/go-ipfs#3145
+- [ ] Updated authors doc                               -- ipfs/go-ipfs#2800
+- [ ] pm: Reverse label numbers                -- ipfs/go-ipfs#3146
+- [ ] Cleanup makefiles                -- ipfs/go-ipfs#2999
+- [ ] use $(MAKE) instead of 'make' in Makefiles (follow-up to f3dc11c)                -- ipfs/go-ipfs#3265
+- [ ] Refactoring install.sh                -- ipfs/go-ipfs#3194
+- [ ] Add check if go code is formatted                -- ipfs/go-ipfs#3421
+- [ ] gx: fix dvcsimport path in package.json                -- ipfs/go-ipfs#3217
+- [ ] bin: dist_get script: prevents get_go_vars() returns same values twice                -- ipfs/go-ipfs#3079
+- [ ] Resort imports in core/core.go                                       -- ipfs/go-ipfs#3395
+
+deps
+- [ ] Update libp2p to have fixed spdystream dep                -- ipfs/go-ipfs#3210
+- [ ] update libp2p and dht packages                -- ipfs/go-ipfs#3263
+- [ ] update to libp2p 4.0.1 and propogate other changes                -- ipfs/go-ipfs#3284
+- [ ] update to libp2p 4.0.4                -- ipfs/go-ipfs#3361
+- [ ] Update go-libp2p across codebase                -- ipfs/go-ipfs#3406
+- [ ] update to go-libp2p 4.1.0                -- ipfs/go-ipfs#3373
+- [ ] update deps for libp2p 3.4.0                -- ipfs/go-ipfs#3110
+- [ ] update go-libp2p-swarm with deadlock fixes                -- ipfs/go-ipfs#3339
+- [ ] update to new cid and ipld node packages                -- ipfs/go-ipfs#3326
+- [ ] update to newer ipld node interface with Copy and better Tree                -- ipfs/go-ipfs#3391
+- [ ] update experimental go-multiplex to 0.2.6                -- ipfs/go-ipfs#3475
+- [ ] use floodsub version 0.8.1                -- ipfs/go-ipfs#3402
+- [ ] bubble up go-datastore deps                -- ipfs/go-ipfs#3438
+- [ ] Update go-ds-measure to 1.1.0                -- ipfs/go-ipfs#3502
+- [ ] Update goprocess dependency to 1.0.0                -- ipfs/go-ipfs#3260
+- [ ] routing: rework interfaces to make separation easier                -- ipfs/go-ipfs#3107
+- [ ] routing: use extracted dht and routing code                -- ipfs/go-ipfs#3220
+- [ ] dht: update to dht code with fixed GetClosestPeers                -- ipfs/go-ipfs#3346
+- [ ] deps: move go-is-domain to gx                -- ipfs/go-ipfs#3077
+- [ ] Extract blocks/key to ipfs/go-key                -- ipfs/go-ipfs#3198
+- [ ] Extract thirdparty/loggables and thirdparty/peerset                -- ipfs/go-ipfs#3204
+- [ ] completely remove go-key dep                -- ipfs/go-ipfs#3439
+- [ ] remove randbo dep, its no longer needed                -- ipfs/go-ipfs#3118
+
+testing
+- [ ] Improve test coverage all over the
+- [ ] ipfs-test-lib: fix test_fsh arg quoting                -- ipfs/go-ipfs#3085
+- [ ] test: 100% coverage for blocks/blocksutil                -- ipfs/go-ipfs#3090
+- [ ] test: 100% coverage on blocks/set                -- ipfs/go-ipfs#3084
+- [ ] test: 81% coverage on blockstore                -- ipfs/go-ipfs#3074
+- [ ] test: reach 80% coverage of unixfs/mod                -- ipfs/go-ipfs#3096
+- [ ] test: 82% coverage on blocks                         -- ipfs/go-ipfs#3086
+- [ ] Test: unixfs @ 87% coverage                          -- ipfs/go-ipfs#3492
+- [ ] Test/routing/offline                            -- ipfs/go-ipfs#3516
+- [ ] Add test for flags package                          -- ipfs/go-ipfs#3449
+- [ ] improve test coverage on merkledag package                -- ipfs/go-ipfs#3113
+- [ ] test: 80% coverage of unixfs/io [WIP]                -- ipfs/go-ipfs#3097
+- [ ] test: accept more than one digit in repo version tests                -- ipfs/go-ipfs#3130
+- [ ] sharness: fix typo in hash in t0050                -- ipfs/go-ipfs#3170
+- [ ] sharness: don't run go-ipfs instance with default config                -- ipfs/go-ipfs#3526
+- [ ] trying to debug random test failures                -- ipfs/go-ipfs#3242
+- [ ] add test to be run to detect future regressions in pinsets                -- ipfs/go-ipfs#3302
+- [ ] Report coverage to coveralls                          -- ipfs/go-ipfs#3460
+- [ ] Do not include core/commands in coverage report                -- ipfs/go-ipfs#3466
+- [ ] Switch coverage to codecov from coveralls                -- ipfs/go-ipfs#3473
+- [ ] Do not require CI to pass for coverage                -- ipfs/go-ipfs#3474
+- [ ] Add multiple small tests                          -- ipfs/go-ipfs#3477
+- [ ] Add test for 'ipfs config replace'                -- ipfs/go-ipfs#3073
+- [ ] fix bug in pinsets and add a stress test for the scenario                -- ipfs/go-ipfs#3273
+
+docs
+- [ ] Update dns help with a correct domain name                -- ipfs/go-ipfs#3087
+- [ ] Add period to `ipfs pin rm`                         -- ipfs/go-ipfs#3088
+- [ ] Make all Taglines use imperative mood                -- ipfs/go-ipfs#3041
+- [ ] Document listing commands better                -- ipfs/go-ipfs#3083
+- [ ] readme: add notes on building for uncommon systems                -- ipfs/go-ipfs#3051
+- [ ] docs: add branch naming conventions                -- ipfs/go-ipfs#3035
+- [ ] commands: replace <default> keyword with <<default>>                -- ipfs/go-ipfs#3129
+- [ ] Doc/cmds/log notice unused                            -- ipfs/go-ipfs#3160
+- [ ] coreunix: fix Add() docs regarding pinning                -- ipfs/go-ipfs#3513
+- [ ] README.md: Add sudo to install commands.                -- ipfs/go-ipfs#3201
+- [ ] Edit issue reporting guides                          -- ipfs/go-ipfs#3006
+- [ ] readme: add `-u` to gx install commands in manual build instructions                -- ipfs/go-ipfs#3236
+- [ ] contribute.md: fix broken link to 'ammending commits' doc.                -- ipfs/go-ipfs#3281
+- [ ] readme: fix go get invocations                        -- ipfs/go-ipfs#3288
+- [ ] Added note about error codes                        -- ipfs/go-ipfs#2915
+- [ ] docs: decapitalize IPFS where possible                -- ipfs/go-ipfs#2911
+- [ ] Add docs for `"commands".Command.Run`                -- ipfs/go-ipfs#3382
+- [ ] Fix help typo                                     -- ipfs/go-ipfs#3393
+- [ ] Add default True to files flush                -- ipfs/go-ipfs#3167
+- [ ] Put config keys in proper case                               -- ipfs/go-ipfs#3365
