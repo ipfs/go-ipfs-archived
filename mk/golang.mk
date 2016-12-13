@@ -6,8 +6,6 @@ GOTAGS ?=
 GOFLAGS ?=
 GOTFLAGS ?=
 
-GOFLAGS += -i # install packages to $GOPATH/pkg/ for major build speed-up
-
 DEPS_GO :=
 TEST_GO :=
 CHECK_GO :=
@@ -19,7 +17,7 @@ go-curr-pkg-tgt=$(d)/$(call go-main-name,$(d))
 go-flags-with-tags=$(GOFLAGS)$(if $(GOTAGS), -tags $(call join-with,$(comma),$(GOTAGS)))
 
 define go-build=
-go build $(go-flags-with-tags) -o "$@" "$(call go-pkg-name,$<)"
+go build -i $(go-flags-with-tags) -o "$@" "$(call go-pkg-name,$<)"
 endef
 
 test_go_short: GOTFLAGS += -test.short

@@ -68,4 +68,7 @@ test: $(TEST)
 deps: gx-deps
 .PHONY: deps
 
+install: $$(GODEPS)
+	go install $(go-flags-with-tags) ./cmd/ipfs
+
 
