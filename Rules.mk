@@ -4,6 +4,9 @@ DISTCLEAN :=
 TEST :=
 TEST_SHORT :=
 
+all: help    # all has to be first defined target
+.PHONY: all
+
 include mk/util.mk
 include mk/golang.mk
 include mk/gx.mk
@@ -61,8 +64,6 @@ export IPFS_REUSEPORT=false
 #     core targets     #
 # -------------------- #
 
-all: help
-.PHONY: all
 
 build: $(TGT_BIN)
 .PHONY: build
@@ -70,6 +71,8 @@ build: $(TGT_BIN)
 clean:
 	rm -f $(CLEAN)
 .PHONY: clean
+
+coverage: $(COVERAGE)
 
 distclean: clean
 	rm -f $(DISTCLEAN)
@@ -126,5 +129,6 @@ help:
 	@echo '  test_sharness_short'
 	@echo '  test_sharness_expensive'
 	@echo '  test_sharness_race'
+	@echo '  coverage     - Collects coverage info from unit tests and sharness'
 	@echo
 .PHONY: help
