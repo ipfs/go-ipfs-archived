@@ -1,5 +1,6 @@
 TGT_BIN :=
 CLEAN :=
+COVERAGE :=
 DISTCLEAN :=
 TEST :=
 TEST_SHORT :=
@@ -73,6 +74,7 @@ clean:
 .PHONY: clean
 
 coverage: $(COVERAGE)
+.PHONY: coverage
 
 distclean: clean
 	rm -f $(DISTCLEAN)
