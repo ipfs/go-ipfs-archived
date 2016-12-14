@@ -38,9 +38,11 @@ test_sharness_short: $(d)/aggregate
 
 test_sharness_expensive: export TEST_EXPENSIVE=1
 test_sharness_expensive: test_sharness_short
+test_sharness_race: GOFLAGS += -race
 .PHONY: test_sharness_short
 
-TEST += test_sharness_short
+TEST += test_sharness_expensive
+TEST_SHORT += test_sharness_short
 
 
 include mk/footer.mk

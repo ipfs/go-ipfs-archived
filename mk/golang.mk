@@ -46,3 +46,4 @@ check_go_version:
 CHECK_GO += check_go_version
 
 TEST += $(TEST_GO)
+TEST_SHORT += test_go_fmt test_go_short
