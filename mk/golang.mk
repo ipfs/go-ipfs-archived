@@ -16,7 +16,7 @@ go-curr-pkg-tgt=$(d)/$(call go-main-name,$(d))
 
 go-flags-with-tags=$(GOFLAGS)$(if $(GOTAGS), -tags $(call join-with,$(comma),$(GOTAGS)))
 
-define go-build=
+define go-build
 go build -i $(go-flags-with-tags) -o "$@" "$(call go-pkg-name,$<)"
 endef
 
