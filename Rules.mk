@@ -96,7 +96,8 @@ uninstall:
 help:
 	@echo 'DEPENDENCY TARGETS:'
 	@echo ''
-	@echo '  deps            - Download dependencies using bundled gx'
+	@echo '  deps                 - Download dependencies using bundled gx'
+	@echo '  test_sharness_deps   - Download and build dependencies for sharness'
 	@echo ''
 	@echo 'BUILD TARGETS:'
 	@echo ''

@@ -32,14 +32,18 @@ CLEAN += $(wildcard $(d)/test-results/*)
 $(SHARNESS_$(d)): $(d) ALWAYS
 	@clonedir=$(dir $(@D)) $</lib/install-sharness.sh
 
+test_sharness_deps: $(SHARNESS_$(d)) $(DEPS_$(d))
+
 test_sharness_short: $(d)/aggregate
 .PHONY: test_sharness_short
 
 
 test_sharness_expensive: export TEST_EXPENSIVE=1
 test_sharness_expensive: test_sharness_short
+.PHONY: test_sharness_expensive
+
 test_sharness_race: GOFLAGS += -race
-.PHONY: test_sharness_short
+.PHONY: test_sharness_race
 
 TEST += test_sharness_expensive
 TEST_SHORT += test_sharness_short
