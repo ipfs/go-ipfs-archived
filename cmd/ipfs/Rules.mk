@@ -13,7 +13,7 @@ PATH := $(realpath $(d)):$(PATH)
 # DEPS_OO_$(d) += pin/internal/pb/header.pb.go unixfs/pb/unixfs.pb.go
 
 # uses second expansion to collect all $(DEPS_GO)
-$(TGTS_$(d)): $(d) $$(DEPS_GO) ALWAYS | $(DPES_OO_$(d))
+$(TGTS_$(d)): $(d) $$(DEPS_GO) ALWAYS #| $(DEPS_OO_$(d))
 	$(go-build)
 
 include mk/footer.mk
