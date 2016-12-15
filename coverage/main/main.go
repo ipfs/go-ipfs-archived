@@ -1,3 +1,5 @@
+// +build testrunmain
+
 package main
 
 import (
