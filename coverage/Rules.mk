@@ -39,7 +39,7 @@ endif
 export IPFS_COVER_DIR:= $(realpath $(d))/sharnesscover/
 
 $(d)/sharness_tests.coverprofile: $(d)/ipfs cmd/ipfs/ipfs-test-cover $(d)/coverage_deps test_sharness_short
-	(cd $(@D)/sharnesscover && sh -c 'gocovmerge *' ) > $@
+	(cd $(@D)/sharnesscover && bash -c 'gocovmerge *' ) > $@
 
 
 PATH := $(realpath $(d)):$(PATH)
