@@ -21,10 +21,11 @@ include $(dir)/Rules.mk
 dir := test
 include $(dir)/Rules.mk
 
-dir := coverage
+dir := cmd/ipfs
 include $(dir)/Rules.mk
 
-dir := cmd/ipfs
+# has to be after cmd/ipfs due to PATH
+dir := coverage
 include $(dir)/Rules.mk
 
 dir := namesys/pb

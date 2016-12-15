@@ -1,16 +1,19 @@
 include mk/header.mk
 
 $(d)/coverage_deps:
-	-mkdir $(@D)/unitcover
+	-rm -rf $(@D)/unitcover && mkdir $(@D)/unitcover
+	-rm -rf $(@D)/sharnesscover && mkdir $(@D)/sharnesscover
+	-rm cmd/ipfs/ipfs
 	go get github.com/wadey/gocovmerge
 	go get golang.org/x/tools/cmd/cover
 .PHONY: $(d)/coverage_deps
 
+# unit tests coverage
 UTESTS_$(d) := $(shell go list -f '{{if (len .TestGoFiles)}}{{.ImportPath}}{{end}}' $(go-flags-with-tags) ./... | grep -v go-ipfs/vendor | grep -v go-ipfs/Godeps)
 
 UCOVER_$(d) := $(addsuffix .coverprofile,$(addprefix $(d)/unitcover/, $(subst /,_,$(UTESTS_$(d)))))
 
-$(UCOVER_$(d)): $(d) $(d)/coverage_deps ALWAYS
+$(UCOVER_$(d)): $(d)/coverage_deps ALWAYS
 	$(eval TMP_PKG := $(subst _,/,$(basename $(@F))))
 	@go test $(go-flags-with-tags) $(GOTFLAGS) -covermode=atomic -coverprofile=$@ $(TMP_PKG)
 
@@ -20,7 +23,20 @@ $(d)/unit_tests.coverprofile: $(UCOVER_$(d))
 
 TGTS_$(d) := $(d)/unit_tests.coverprofile
 
-$(d)/sharness_tests.coverprofile: $(d)/coverage_deps
+
+# sharness tests coverage
+
+ifneq ($(filter coverage,$(MAKECMDGOALS)),)
+	# this is quite hacky but it is best way I could fiture out
+	DEPS_test/sharness += cmd/ipfs/ipfs-test-cover $(d)/coverage_deps
+endif
+
+export COVER_FMT:= $(realpath $(d))/sharnesscover/XXXXXXXXXX.coverprofile
+
+$(d)/sharness_tests.coverprofile: cmd/ipfs/ipfs-test-cover $(d)/coverage_deps test_sharness_short
+
+
+PATH := $(realpath $(d)):$(PATH)
 
 TGTS_$(d) += $(d)/sharness_tests.coverprofile
 
