@@ -35,6 +35,6 @@ dependencies:
 
 test:
   override:
-    - case $CIRCLE_NODE_INDEX in 0) make coverage/unit_tests.coverprofile; bash <(curl -s https://codecov.io/bash) -cF unittests -X search -f coverage/unit_tests.coverprofile;; 1) make coverage/sharness_tests.coverprofile; bash <(curl -s https://codecov.io/bash) -cF sharness -X search -f coverage/sharness_tests.coverprofile;; esac:
+    - case $CIRCLE_NODE_INDEX in 0) make coverage/unit_tests.coverprofile && bash <(curl -s https://codecov.io/bash) -cF unittests -X search -f coverage/unit_tests.coverprofile;; 1) make coverage/sharness_tests.coverprofile &&  bash <(curl -s https://codecov.io/bash) -cF sharness -X search -f coverage/sharness_tests.coverprofile;; esac:
         pwd: "../.go_workspace/src/$IMPORT_PATH"
         parallel: true
