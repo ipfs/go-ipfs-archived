@@ -24,6 +24,7 @@ func TestRunMain(t *testing.T) {
 	}
 
 	// close outputs so go testing doesn't print anything
-	os.Stderr = os.DevNull
-	os.Stdout = os.DevNull
+	null, _ := os.Open(os.DevNull)
+	os.Stderr = null
+	os.Stdout = null
 }
