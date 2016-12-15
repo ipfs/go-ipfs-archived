@@ -17,15 +17,13 @@ func TestRunMain(t *testing.T) {
 	args := flag.Args()
 	os.Args = append([]string{os.Args[0]}, args...)
 	ret := mainRet()
-	p := os.Getenv("IPFS_COVERT_RET_FILE")
+
+	p := os.Getenv("IPFS_COVER_RET_FILE")
 	if len(p) != 0 {
 		ioutil.WriteFile(p, []byte(fmt.Sprintf("%d\n", ret)), 0777)
 	}
 
 	// close outputs so go testing doesn't print anything
-	null, err := os.Open("/dev/null")
-	if err == nil {
-		os.Stderr = null
-		os.Stdout = null
-	}
+	os.Stderr = os.DevNull
+	os.Stdout = os.DevNull
 }

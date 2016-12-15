@@ -25,15 +25,19 @@ TGTS_$(d) := $(d)/unit_tests.coverprofile
 
 
 # sharness tests coverage
+$(d)/ipfs: $(d)/main
+	$(go-build)
+
+CLEAN += $(d)/ipfs
 
 ifneq ($(filter coverage,$(MAKECMDGOALS)),)
 	# this is quite hacky but it is best way I could fiture out
-	DEPS_test/sharness += cmd/ipfs/ipfs-test-cover $(d)/coverage_deps
+	DEPS_test/sharness += cmd/ipfs/ipfs-test-cover $(d)/coverage_deps $(d)/ipfs
 endif
 
-export COVER_FMT:= $(realpath $(d))/sharnesscover/XXXXXXXXXX.coverprofile
+export IPFS_COVER_DIR:= $(realpath $(d))/sharnesscover/
 
-$(d)/sharness_tests.coverprofile: cmd/ipfs/ipfs-test-cover $(d)/coverage_deps test_sharness_short
+$(d)/sharness_tests.coverprofile: $(d)/ipfs cmd/ipfs/ipfs-test-cover $(d)/coverage_deps test_sharness_short
 
 
 PATH := $(realpath $(d)):$(PATH)
