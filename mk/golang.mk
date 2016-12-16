@@ -10,11 +10,12 @@ DEPS_GO :=
 TEST_GO :=
 CHECK_GO :=
 
-go-pkg-name=$(shell go list ./$(1))
+go-pkg-name=$(shell go list $(go-tags) ./$(1))
 go-main-name=$(notdir $(call go-pkg-name,$(1)))$(?exe)
 go-curr-pkg-tgt=$(d)/$(call go-main-name,$(d))
 
-go-flags-with-tags=$(GOFLAGS)$(if $(GOTAGS), -tags $(call join-with,$(comma),$(GOTAGS)))
+go-tags=$(if $(GOTAGS), -tags $(call join-with,$(comma),$(GOTAGS)))
+go-flags-with-tags=$(GOFLAGS)$(go-tags)
 
 define go-build
 go build -i $(go-flags-with-tags) -o "$@" "$(call go-pkg-name,$<)"

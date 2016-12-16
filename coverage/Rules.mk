@@ -1,9 +1,8 @@
 include mk/header.mk
 
 $(d)/coverage_deps:
-	-rm -rf $(@D)/unitcover && mkdir $(@D)/unitcover
-	-rm -rf $(@D)/sharnesscover && mkdir $(@D)/sharnesscover
-	-rm cmd/ipfs/ipfs
+	rm -rf $(@D)/unitcover && mkdir $(@D)/unitcover
+	rm -rf $(@D)/sharnesscover && mkdir $(@D)/sharnesscover
 	go get -u github.com/Kubuxu/gocovmerge
 	go get -u golang.org/x/tools/cmd/cover
 .PHONY: $(d)/coverage_deps
