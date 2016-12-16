@@ -18,6 +18,7 @@ import (
 	corerepo "github.com/ipfs/go-ipfs/core/corerepo"
 	"github.com/ipfs/go-ipfs/core/corerouting"
 	nodeMount "github.com/ipfs/go-ipfs/fuse/node"
+	config "github.com/ipfs/go-ipfs/repo/config"
 	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
 	migrate "github.com/ipfs/go-ipfs/repo/fsrepo/migrations"
 
@@ -399,7 +400,7 @@ func daemonFunc(req cmds.Request, res cmds.Response) {
 	}
 
 	// repo blockstore GC - if --enable-gc flag is present
-	err, gcErrc := maybeRunGC(req, node)
+	err, gcErrc := runPeriodicGC(ctx, cfg, node)
 	if err != nil {
 		res.SetError(err, cmds.ErrNormal)
 		return
@@ -605,7 +606,7 @@ func mountFuse(req cmds.Request) error {
 	return nil
 }
 
-func maybeRunGC(req cmds.Request, node *core.IpfsNode) (error, <-chan error) {
+func runPeriodicGC(ctx context.Context, cfg config.Config, node *core.IpfsNode) (error, <-chan error) {
 	enableGC, _, err := req.Option(enableGCKwd).Bool()
 	if err != nil {
 		return err, nil
@@ -614,11 +615,17 @@ func maybeRunGC(req cmds.Request, node *core.IpfsNode) (error, <-chan error) {
 		return nil, nil
 	}
 
+	gc := corerepo.NewGC(node.FilesRoot, node.Blockstore, node.DAG, node.Pinning, node.Repo)
+	err = gc.SetConfig(cfg.Datastore)
+	if err != nil {
+		return err, nil
+	}
+
+	log.Info("enabling GC: period %ds, watermark %d MiB, capacity %d MiB",
+		period, wm*1024*1024, cpcty*1024*1024)
+
 	errc := make(chan error)
-	go func() {
-		errc <- corerepo.PeriodicGC(req.Context(), node)
-		close(errc)
-	}()
+	go gc.Run(ctx, errc)
 	return nil, errc
 }
 

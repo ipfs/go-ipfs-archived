@@ -34,6 +34,7 @@ import (
 	ipnsrp "github.com/ipfs/go-ipfs/namesys/republisher"
 	path "github.com/ipfs/go-ipfs/path"
 	pin "github.com/ipfs/go-ipfs/pin"
+	gc "github.com/ipfs/go-ipfs/pin/gc"
 	repo "github.com/ipfs/go-ipfs/repo"
 	config "github.com/ipfs/go-ipfs/repo/config"
 	nilrouting "github.com/ipfs/go-ipfs/routing/none"
@@ -108,6 +109,7 @@ type IpfsNode struct {
 	Reporter   metrics.Reporter
 	Discovery  discovery.Service
 	FilesRoot  *mfs.Root
+	GC         *gc.GC
 
 	// Online
 	PeerHost     p2phost.Host        // the network host (server+client)
