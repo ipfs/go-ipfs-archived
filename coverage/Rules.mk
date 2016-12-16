@@ -4,8 +4,8 @@ $(d)/coverage_deps:
 	-rm -rf $(@D)/unitcover && mkdir $(@D)/unitcover
 	-rm -rf $(@D)/sharnesscover && mkdir $(@D)/sharnesscover
 	-rm cmd/ipfs/ipfs
-	go get github.com/Kubuxu/gocovmerge
-	go get golang.org/x/tools/cmd/cover
+	go get -u github.com/Kubuxu/gocovmerge
+	go get -u golang.org/x/tools/cmd/cover
 .PHONY: $(d)/coverage_deps
 
 # unit tests coverage
@@ -38,7 +38,7 @@ endif
 
 export IPFS_COVER_DIR:= $(realpath $(d))/sharnesscover/
 
-$(d)/sharness_tests.coverprofile: $(d)/ipfs cmd/ipfs/ipfs-test-cover $(d)/coverage_deps test_sharness_short
+$(d)/sharness_tests.coverprofile: ALWAYS  # $(d)/ipfs cmd/ipfs/ipfs-test-cover $(d)/coverage_deps test_sharness_short
 	(cd $(@D)/sharnesscover && find . -type f | gocovmerge -list -) > $@
 
 
