@@ -1,0 +1,23 @@
+FROM golang:1.7.4-wheezy
+
+ENV GO_IPFS_PATH /go/src/github.com/ipfs/go-ipfs
+ENV IPFS_PATH /data/ipfs
+ENV TEST_NO_FUSE 1
+
+WORKDIR $GO_IPFS_PATH
+
+RUN apt-get update
+RUN apt-get install --yes netcat
+
+RUN mkdir -p $IPFS_PATH
+RUN chmod 755 $IPFS_PATH
+RUN adduser --disabled-password --gecos "" --home $IPFS_PATH --uid 1000 ipfs
+RUN chown ipfs:ipfs $IPFS_PATH
+
+COPY . $GO_IPFS_PATH
+
+RUN chmod -R 777 $GO_IPFS_PATH
+RUN chmod -R 777 $IPFS_PATH
+
+USER ipfs
+CMD ["make", "test"]

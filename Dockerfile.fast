@@ -48,7 +48,8 @@ RUN cd $SRC_PATH \
 	&& cp ipfs /usr/local/bin/ipfs \
 	&& cp $SRC_PATH/bin/container_daemon /usr/local/bin/start_ipfs \
 	&& chmod 755 /usr/local/bin/start_ipfs \
-	&& apk del --purge musl-dev gcc go git && rm -rf $GOPATH && rm -vf $IPFS_PATH/api
+	&& apk del --purge musl-dev gcc go git && rm -rf $GOPATH \
+	&& rm -vf $IPFS_PATH/api && rm -rf $SRC_PATH/test
 
 USER ipfs
 VOLUME $IPFS_PATH

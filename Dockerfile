@@ -58,7 +58,8 @@ RUN apk add --update musl-dev gcc go git bash wget ca-certificates \
 	&& cp $SRC_PATH/bin/container_daemon /usr/local/bin/start_ipfs \
 	&& chmod 755 /usr/local/bin/start_ipfs \
 	# Remove all build-time dependencies
-	&& apk del --purge musl-dev gcc go git && rm -rf $GOPATH && rm -vf $IPFS_PATH/api
+	&& apk del --purge musl-dev gcc go git && rm -rf $GOPATH \
+	&& rm -vf $IPFS_PATH/api && rm -rf $SRC_PATH/test
 
 # Call uid 1000 "ipfs"
 USER ipfs
