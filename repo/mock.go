@@ -3,6 +3,7 @@ package repo
 import (
 	"errors"
 
+	filestore "github.com/ipfs/go-ipfs/filestore"
 	keystore "github.com/ipfs/go-ipfs/keystore"
 	"github.com/ipfs/go-ipfs/repo/config"
 
@@ -44,3 +45,5 @@ func (m *Mock) Close() error { return errTODO }
 func (m *Mock) SetAPIAddr(addr ma.Multiaddr) error { return errTODO }
 
 func (m *Mock) Keystore() keystore.Keystore { return nil }
+
+func (m *Mock) FileManager() *filestore.FileManager { return nil }
