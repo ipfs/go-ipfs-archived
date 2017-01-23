@@ -16,6 +16,11 @@ test_expect_success "set up testbed" '
 	# defuse the fallback listener
 	ipfsi 0 config --json Swarm.AddrFilters '"'"'["/ip6/::/ipcidr/0"]'"'"'
 	ipfsi 2 config --json Swarm.AddrFilters '"'"'["/ip4/0.0.0.0/ipcidr/0"]'"'"'
+
+	ipfsi 0 config --bool Relay.Enabled true
+	ipfsi 0 config --json Relay.Peers '"'"'["'`ipfsi 0 config Identity.PeerID`'"]'"'"'
+	ipfsi 1 config --bool Relay.Enabled true
+	ipfsi 2 config --bool Relay.Enabled true
 '
 
 test_expect_success "start up nodes" '
@@ -30,7 +35,7 @@ test_expect_success "connect up nodes" '
 test_expect_success "open the relay and try pinging" '
 	peerid0=`ipfsi 0 config Identity.PeerID`
 	peerid2=`ipfsi 2 config Identity.PeerID`
-	ipfsi 0 swarm connect /exp-relay/$peerid2
+	ipfsi 0 swarm connect /libp2p-circuit-relay/$peerid2
 	ipfsi 2 ping -n 3 $peerid0
 	ipfsi 0 ping -n 3 $peerid2
 '

@@ -688,6 +688,9 @@ func constructPeerHost(ctx context.Context, id peer.ID, ps pstore.Peerstore, bwr
 
 	host := p2pbhost.New(network, p2pbhost.NATPortMap, bwr)
 
+	// XXX here -- this is so the local side can actually dial through the relay
+	swrm.AddTransport(host.RelayTransport())
+
 	return host, nil
 }
 
