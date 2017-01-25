@@ -3,6 +3,7 @@ package helpers
 import (
 	"io"
 	"os"
+	"sync"
 
 	"github.com/ipfs/go-ipfs/commands/files"
 	"github.com/ipfs/go-ipfs/importer/chunk"
@@ -23,6 +24,8 @@ type DagBuilderHelper struct {
 	batch     *dag.Batch
 	fullPath  string
 	stat      os.FileInfo
+
+	rawpromises []*rawNodePromise
 }
 
 type DagBuilderParams struct {
@@ -51,6 +54,7 @@ func (dbp *DagBuilderParams) New(spl chunk.Splitter) *DagBuilderHelper {
 		maxlinks:  dbp.Maxlinks,
 		batch:     dbp.Dagserv.Batch(),
 	}
+
 	if fi, ok := spl.Reader().(files.FileInfo); dbp.NoCopy && ok {
 		db.fullPath = fi.AbsPath()
 		db.stat = fi.Stat()
@@ -62,14 +66,41 @@ func (dbp *DagBuilderParams) New(spl chunk.Splitter) *DagBuilderHelper {
 // in the nextData field. it is idempotent-- if nextData is full
 // it will do nothing.
 func (db *DagBuilderHelper) prepareNext() {
-	// if we already have data waiting to be consumed, we're ready
-	if db.nextData != nil || db.recvdErr != nil {
-		return
-	}
+	if db.rawLeaves {
+		if db.recvdErr != nil {
+			return
+		}
 
-	db.nextData, db.recvdErr = db.spl.NextBytes()
-	if db.recvdErr == io.EOF {
-		db.recvdErr = nil
+		if len(db.rawpromises) < 4 {
+			for len(db.rawpromises) < 16 {
+				data, err := db.spl.NextBytes()
+				if err != nil {
+					if err != io.EOF {
+						db.recvdErr = err
+					}
+					return
+				}
+
+				prom := &rawNodePromise{}
+				prom.lk.Lock()
+				go func(d []byte) {
+					prom.val = dag.NewRawNode(d)
+					prom.lk.Unlock()
+				}(data)
+				db.rawpromises = append(db.rawpromises, prom)
+			}
+		}
+	} else {
+		// if we already have data waiting to be consumed, we're ready
+		if db.nextData != nil || db.recvdErr != nil {
+			return
+		}
+
+		db.nextData, db.recvdErr = db.spl.NextBytes()
+		if db.recvdErr == io.EOF {
+			db.recvdErr = nil
+		}
+
 	}
 }
 
@@ -81,7 +112,7 @@ func (db *DagBuilderHelper) Done() bool {
 	if db.recvdErr != nil {
 		return false
 	}
-	return db.nextData == nil
+	return db.nextData == nil && len(db.rawpromises) == 0
 }
 
 // Next returns the next chunk of data to be inserted into the dag
@@ -124,25 +155,34 @@ func (db *DagBuilderHelper) FillNodeLayer(node *UnixfsNode) error {
 }
 
 func (db *DagBuilderHelper) GetNextDataNode() (*UnixfsNode, error) {
-	data, err := db.Next()
-	if err != nil {
-		return nil, err
-	}
-
-	if data == nil { // we're done!
-		return nil, nil
-	}
-
-	if len(data) > BlockSizeLimit {
-		return nil, ErrSizeLimitExceeded
-	}
-
 	if db.rawLeaves {
+		if db.recvdErr != nil {
+			return nil, db.recvdErr
+		}
+		if len(db.rawpromises) == 0 {
+			return nil, nil
+		}
+
+		rn := db.rawpromises[0].Get()
+		db.rawpromises = db.rawpromises[1:]
 		return &UnixfsNode{
-			rawnode: dag.NewRawNode(data),
+			rawnode: rn,
 			raw:     true,
 		}, nil
 	} else {
+		data, err := db.Next()
+		if err != nil {
+			return nil, err
+		}
+
+		if data == nil { // we're done!
+			return nil, nil
+		}
+
+		if len(data) > BlockSizeLimit {
+			return nil, ErrSizeLimitExceeded
+		}
+
 		blk := NewUnixfsBlock()
 		blk.SetData(data)
 		return blk, nil
@@ -175,4 +215,15 @@ func (db *DagBuilderHelper) Maxlinks() int {
 
 func (db *DagBuilderHelper) Close() error {
 	return db.batch.Commit()
+}
+
+type rawNodePromise struct {
+	lk  sync.Mutex
+	val *dag.RawNode
+}
+
+func (rn *rawNodePromise) Get() *dag.RawNode {
+	rn.lk.Lock()
+	defer rn.lk.Unlock()
+	return rn.val
 }
