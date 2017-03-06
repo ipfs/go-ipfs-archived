@@ -60,18 +60,5 @@ test_expect_success "ipfs cat on published content succeeds" '
     test_cmp expected actual
 '
 
-# publish with an explicit node ID
-
-test_expect_failure "'ipfs name publish <local-id> <hash>' succeeds" '
-	PEERID=`ipfs id --format="<id>"` &&
-	test_check_peerid "${PEERID}" &&
-	echo ipfs name publish "${PEERID}" "/ipfs/$HASH_WELCOME_DOCS" &&
-	ipfs name publish "${PEERID}" "/ipfs/$HASH_WELCOME_DOCS" >actual_node_id_publish
-'
-
-test_expect_failure "publish with our explicit node ID looks good" '
-	echo "Published to ${PEERID}: /ipfs/$HASH_WELCOME_DOCS" >expected_node_id_publish &&
-	test_cmp expected_node_id_publish actual_node_id_publish
-'
 
 test_done
