@@ -61,4 +61,16 @@ test_expect_success "ipfs cat on published content succeeds" '
 '
 
 
+test_expect_success "ipfs publish empty file" '
+	ipfs name publish "/ipfs/$HASH_EMPTY_DIR"
+'
+
+test_expect_success "ipfs publish short timout" '
+	ipfs name publish -t 1ns "/ipfs/$HASH_WELCOME_DOCS"
+'
+
+test_expect_success "resolve it" '
+	ipfs name resolve
+'
+
 test_done
