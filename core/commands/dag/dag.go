@@ -29,6 +29,7 @@ to deprecate and replace the existing 'ipfs object' command moving forward.
 		"put":     DagPutCmd,
 		"get":     DagGetCmd,
 		"resolve": DagResolveCmd,
+		"ls":      DagLsCmd,
 		"tree":    DagTreeCmd,
 	},
 }
@@ -157,6 +158,53 @@ var DagGetCmd = &cmds.Command{
 		}
 
 		res.SetOutput(out)
+	},
+}
+
+var DagLsCmd = &cmds.Command{
+	Helptext: cmds.HelpText{
+		Tagline: "List a dag node",
+		ShortDescription: `
+`,
+	},
+	Arguments: []cmds.Argument{
+		cmds.StringArg("ref", true, false, "The object to list").EnableStdin(),
+	},
+	Run: func(req cmds.Request, res cmds.Response) {
+		n, err := req.InvocContext().GetNode()
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		p, err := path.ParsePath(req.Arguments()[0])
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		obj, rem, err := n.Resolver.ResolveToLastNode(req.Context(), p)
+		if err != nil {
+			res.SetError(err, cmds.ErrNormal)
+			return
+		}
+
+		res.SetOutput(obj.Tree(path.Join(rem), 1))
+	},
+	Type: []string{},
+	Marshalers: cmds.MarshalerMap{
+		cmds.Text: func(res cmds.Response) (io.Reader, error) {
+			vals, ok := res.Output().([]string)
+			if !ok {
+				return nil, fmt.Errorf("expected an array of strings from the api")
+			}
+
+			buf := new(bytes.Buffer)
+			for _, v := range vals {
+				fmt.Fprintln(buf, v)
+			}
+			return buf, nil
+		},
 	},
 }
 
