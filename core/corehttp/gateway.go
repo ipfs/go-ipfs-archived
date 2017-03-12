@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	core "github.com/ipfs/go-ipfs/core"
 	coreapi "github.com/ipfs/go-ipfs/core/coreapi"
 	config "github.com/ipfs/go-ipfs/repo/config"
+	swarm "gx/ipfs/QmTU8NWsDYNShMA3hjPfEZTg3pD7YgX62sFmZdEgbjtWq2/go-libp2p-swarm"
 	id "gx/ipfs/QmeWJwi61vii5g8zQUB9UGegfUbmhTKHgeDFP9XuSp5jZ4/go-libp2p/p2p/protocol/identify"
 )
 
@@ -46,4 +48,29 @@ func VersionOption() ServeOption {
 		})
 		return mux, nil
 	}
+}
+
+func WebsocketUpgrade() ServeOption {
+	return func(n *core.IpfsNode, _ net.Listener, mux *http.ServeMux) (*http.ServeMux, error) {
+		swrm := n.PeerHost.Network().(*swarm.Network).Swarm()
+
+		upgrader := http.NewServeMux()
+		upgrader.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			if wantsWebsocketUpgrade(r) {
+				ws.ServeHTTP(w, r)
+			} else {
+				mux.ServeHTTP(w, r)
+			}
+		})
+		return upgrader, nil
+	}
+}
+
+func wantsWebsocketUpgrade(r *http.Request) bool {
+	connhdr := strings.ToLower(r.Header["Connection"])
+	uphdr := strings.ToLower(r.Header["Upgrade"])
+	if connhdr == "upgrade" && upgrade == "websocket" {
+		return true
+	}
+	return false
 }
