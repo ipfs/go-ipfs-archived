@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	repo "github.com/ipfs/go-ipfs/repo"
+	sbs "gx/ipfs/QmPAFr5hRxsceHEW9ZCkVXRsSSbFdfSvDqz5ancGEeQDzE/go-sbs"
 
 	measure "gx/ipfs/QmNPv1yzXBqxzqjfTzHCeBoicxxZgHzLezdY2hMCZ3r6EU/go-ds-measure"
 	flatfs "gx/ipfs/QmXZEfbEv9sXG9JnLoMNhREDMDgkq5Jd7uWJ7d77VJ4pxn/go-ds-flatfs"
@@ -49,6 +50,8 @@ func (r *FSRepo) constructDatastore(params map[string]interface{}) (repo.Datasto
 
 	case "levelds":
 		return r.openLeveldbDatastore(params)
+	case "sbs":
+		return r.openSbsDatastore(params)
 	default:
 		return nil, fmt.Errorf("unknown datastore type: %s", params["type"])
 	}
@@ -123,4 +126,13 @@ func (r *FSRepo) openLeveldbDatastore(params map[string]interface{}) (repo.Datas
 
 func (r *FSRepo) openMeasureDB(prefix string, child repo.Datastore) (repo.Datastore, error) {
 	return measure.New(prefix, child), nil
+}
+
+func (r *FSRepo) openSbsDatastore(params map[string]interface{}) (repo.Datastore, error) {
+	p := params["path"].(string)
+	if !filepath.IsAbs(p) {
+		p = filepath.Join(r.path, p)
+	}
+
+	return sbs.NewSbsDS(p)
 }
