@@ -93,7 +93,7 @@ func datastoreConfig() (*Datastore, error) {
 						"type":      "flatfs",
 						"path":      "blocks",
 						"nosync":    false,
-						"prefixLen": 4,
+						"shardFunc": "/repo/flatfs/shard/v1/next-to-last/2",
 					},
 				},
 				map[string]interface{}{

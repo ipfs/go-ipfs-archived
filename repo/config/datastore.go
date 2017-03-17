@@ -25,13 +25,17 @@ type S3Datastore struct {
 
 type FlatDS struct {
 	Path      string
-	PrefixLen int
+	ShardFunc string
 	Sync      bool
 }
 
 type LevelDB struct {
 	Path        string
 	Compression string
+}
+
+type SbsDS struct {
+	Path string
 }
 
 // DataStorePath returns the default data store path given a configuration root
