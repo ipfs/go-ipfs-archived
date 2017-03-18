@@ -38,18 +38,18 @@ type UnixfsAPI interface {
 	Ls(context.Context, Path) ([]*Link, error)
 }
 
-// type ObjectAPI interface {
-// 	New() (cid.Cid, Object)
-// 	Get(string) (Object, error)
-// 	Links(string) ([]*Link, error)
-// 	Data(string) (Reader, error)
-// 	Stat(string) (ObjectStat, error)
-// 	Put(Object) (cid.Cid, error)
-// 	SetData(string, Reader) (cid.Cid, error)
-// 	AppendData(string, Data) (cid.Cid, error)
-// 	AddLink(string, string, string) (cid.Cid, error)
-// 	RmLink(string, string) (cid.Cid, error)
-// }
+type ObjectAPI interface {
+	AddLink(context.Context, Path, string, Path) (Path, error)
+	RmLink(context.Context, Path, string) (Path, error)
+	// 	New() (cid.Cid, Object)
+	// 	Get(string) (Object, error)
+	// 	Links(string) ([]*Link, error)
+	// 	Data(string) (Reader, error)
+	// 	Stat(string) (ObjectStat, error)
+	// 	Put(Object) (cid.Cid, error)
+	// 	SetData(string, Reader) (cid.Cid, error)
+	// 	AppendData(string, Data) (cid.Cid, error)
+}
 
 // type ObjectStat struct {
 // 	Cid            cid.Cid
