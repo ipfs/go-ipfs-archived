@@ -1,5 +1,9 @@
 package config
 
+import (
+	cfgds "github.com/ipfs/go-ipfs/repo/config/datastore"
+)
+
 // DefaultDataStoreDirectory is the directory to store all the local IPFS data.
 const DefaultDataStoreDirectory = "datastore"
 
@@ -11,7 +15,7 @@ type Datastore struct {
 	Path               string
 	NoSync             bool // deprecated
 
-	Spec map[string]interface{}
+	Spec *cfgds.CoreCtor
 
 	HashOnRead      bool
 	BloomFilterSize int
@@ -21,21 +25,6 @@ type S3Datastore struct {
 	Region string `json:"region"`
 	Bucket string `json:"bucket"`
 	ACL    string `json:"acl"`
-}
-
-type FlatDS struct {
-	Path      string
-	ShardFunc string
-	Sync      bool
-}
-
-type LevelDB struct {
-	Path        string
-	Compression string
-}
-
-type SbsDS struct {
-	Path string
 }
 
 // DataStorePath returns the default data store path given a configuration root

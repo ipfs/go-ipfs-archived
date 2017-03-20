@@ -88,6 +88,10 @@ var (
 	onlyOne repo.OnlyOne
 )
 
+func init() {
+	registerDStoreCtors()
+}
+
 // FSRepo represents an IPFS FileSystem Repo. It is safe for use by multiple
 // callers.
 type FSRepo struct {
@@ -367,12 +371,12 @@ func (r *FSRepo) openKeystore() error {
 // openDatastore returns an error if the config file is not present.
 func (r *FSRepo) openDatastore() error {
 	if r.config.Datastore.Spec != nil {
-		d, err := r.constructDatastore(r.config.Datastore.Spec)
-		if err != nil {
-			return err
-		}
+		//	d, err := r.constructDatastore(r.config.Datastore.Spec)
+		//if err != nil {
+		//return err
+		//}
 
-		r.ds = d
+		//r.ds = d
 	} else {
 		// TODO: This is for legacy configs, remove in the future
 		d, err := openDefaultDatastore(r)
