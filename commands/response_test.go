@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	cmdsutil "github.com/ipfs/go-ipfs-cmds/cmdsutil"
 )
 
 type TestOutput struct {
@@ -26,7 +28,7 @@ func TestMarshalling(t *testing.T) {
 		t.Error("Should have failed (no encoding type specified in request)")
 	}
 
-	req.SetOption(EncShort, JSON)
+	req.SetOption(cmdsutil.EncShort, JSON)
 
 	reader, err := res.Marshal()
 	if err != nil {
@@ -39,7 +41,7 @@ func TestMarshalling(t *testing.T) {
 		t.Error("Incorrect JSON output")
 	}
 
-	res.SetError(fmt.Errorf("Oops!"), ErrClient)
+	res.SetError(fmt.Errorf("Oops!"), cmdsutil.ErrClient)
 	reader, err = res.Marshal()
 	if err != nil {
 		t.Error("Should have passed")

@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	cmdsutil "github.com/ipfs/go-ipfs-cmds/cmdsutil"
 )
 
 // ErrorType signfies a category of errors
@@ -93,8 +95,8 @@ type Response interface {
 	Request() Request
 
 	// Set/Return the response Error
-	SetError(err error, code ErrorType)
-	Error() *Error
+	SetError(err error, code cmdsutil.ErrorType)
+	Error() *cmdsutil.Error
 
 	// Sets/Returns the response value
 	SetOutput(interface{})
@@ -122,7 +124,7 @@ type Response interface {
 
 type response struct {
 	req    Request
-	err    *Error
+	err    *cmdsutil.Error
 	value  interface{}
 	out    io.Reader
 	length uint64
@@ -151,12 +153,12 @@ func (r *response) SetLength(l uint64) {
 	r.length = l
 }
 
-func (r *response) Error() *Error {
+func (r *response) Error() *cmdsutil.Error {
 	return r.err
 }
 
-func (r *response) SetError(err error, code ErrorType) {
-	r.err = &Error{Message: err.Error(), Code: code}
+func (r *response) SetError(err error, code cmdsutil.ErrorType) {
+	r.err = &cmdsutil.Error{Message: err.Error(), Code: code}
 }
 
 func (r *response) Marshal() (io.Reader, error) {
@@ -164,7 +166,7 @@ func (r *response) Marshal() (io.Reader, error) {
 		return bytes.NewReader([]byte{}), nil
 	}
 
-	enc, found, err := r.req.Option(EncShort).String()
+	enc, found, err := r.req.Option(cmdsutil.EncShort).String()
 	if err != nil {
 		return nil, err
 	}

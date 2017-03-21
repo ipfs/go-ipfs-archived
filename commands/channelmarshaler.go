@@ -11,7 +11,9 @@ type ChannelMarshaler struct {
 }
 
 func (cr *ChannelMarshaler) Read(p []byte) (int, error) {
+	log.Debug("CM: Read(). reader=", cr.reader)
 	if cr.reader == nil {
+		log.Debug("CM: Read().if waiting for read on chan", cr.Channel)
 		val, more := <-cr.Channel
 		if !more {
 			//check error in response
