@@ -13,7 +13,6 @@ import (
 	"github.com/ipfs/go-ipfs/blocks"
 	"github.com/ipfs/go-ipfs/blocks/blockstore"
 	"github.com/ipfs/go-ipfs/blockservice"
-	"github.com/ipfs/go-ipfs/commands/files"
 	"github.com/ipfs/go-ipfs/core"
 	dag "github.com/ipfs/go-ipfs/merkledag"
 	"github.com/ipfs/go-ipfs/pin/gc"
@@ -22,6 +21,7 @@ import (
 	pi "github.com/ipfs/go-ipfs/thirdparty/posinfo"
 	"github.com/ipfs/go-ipfs/thirdparty/testutil"
 
+	"github.com/ipfs/go-ipfs-cmds/files"
 	cid "gx/ipfs/QmV5gPoRsjN1Gid3LMdNZTyfCtP2DsvqEbMAmz82RmmiGk/go-cid"
 )
 
