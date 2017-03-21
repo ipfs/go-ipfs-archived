@@ -188,12 +188,13 @@ test_add_cat_expensive() {
 test_add_named_pipe() {
     err_prefix=$1
     test_expect_success "useful error message when adding a named pipe" '
-        mkfifo named-pipe &&
+      mkfifo named-pipe &&
+	    test_expect_code 1 ipfs -D add named-pipe 2>add_fifo_debug &&
 	    test_expect_code 1 ipfs add named-pipe 2>actual &&
-        rm named-pipe &&
-        grep "Error: Unrecognized file type for named-pipe: $(generic_stat named-pipe)" actual &&
-        grep USAGE actual &&
-        grep "ipfs add" actual
+      grep "Error: Unrecognized file type for named-pipe: $(generic_stat named-pipe)" actual >/dev/null &&
+      rm named-pipe &&
+      grep USAGE actual >/dev/null &&
+      grep "ipfs add" actual >/dev/null
     '
 
     test_expect_success "useful error message when recursively adding a named pipe" '
