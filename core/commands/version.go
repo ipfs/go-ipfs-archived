@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 	config "github.com/ipfs/go-ipfs/repo/config"
 	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
@@ -20,16 +21,16 @@ type VersionOutput struct {
 }
 
 var VersionCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline:          "Show ipfs version information.",
 		ShortDescription: "Returns the current version of ipfs and exits.",
 	},
 
-	Options: []cmds.Option{
-		cmds.BoolOption("number", "n", "Only show the version number.").Default(false),
-		cmds.BoolOption("commit", "Show the commit hash.").Default(false),
-		cmds.BoolOption("repo", "Show repo version.").Default(false),
-		cmds.BoolOption("all", "Show all version information").Default(false),
+	Options: []cmdsutil.Option{
+		cmdsutil.BoolOption("number", "n", "Only show the version number.").Default(false),
+		cmdsutil.BoolOption("commit", "Show the commit hash.").Default(false),
+		cmdsutil.BoolOption("repo", "Show repo version.").Default(false),
+		cmdsutil.BoolOption("all", "Show all version information").Default(false),
 	},
 	Run: func(req cmds.Request, res cmds.Response) {
 		res.SetOutput(&VersionOutput{
@@ -42,7 +43,16 @@ var VersionCmd = &cmds.Command{
 	},
 	Marshalers: cmds.MarshalerMap{
 		cmds.Text: func(res cmds.Response) (io.Reader, error) {
-			v := res.Output().(*VersionOutput)
+			ch, ok := res.Output().(chan interface{})
+			if !ok {
+				return nil, fmt.Errorf("cast error. got %T, expected chan interface{}", res)
+			}
+
+			out := <-ch
+			v, ok := out.(*VersionOutput)
+			if !ok {
+				return nil, fmt.Errorf("cast error. got %T, expected *VersionOutput", out)
+			}
 
 			repo, _, err := res.Request().Option("repo").Bool()
 			if err != nil {

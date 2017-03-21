@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 	core "github.com/ipfs/go-ipfs/core"
 	peer "gx/ipfs/QmWUswjn261LSyVxWAEpMVtPdy8zmKBJJfBpG3Qdpa8ZsE/go-libp2p-peer"
@@ -27,7 +28,7 @@ type PingResult struct {
 }
 
 var PingCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Send echo request packets to IPFS hosts.",
 		ShortDescription: `
 'ipfs ping' is a tool to test sending data to other nodes. It finds nodes
@@ -35,11 +36,11 @@ via the routing system, sends pings, waits for pongs, and prints out round-
 trip latency information.
 		`,
 	},
-	Arguments: []cmds.Argument{
-		cmds.StringArg("peer ID", true, true, "ID of peer to be pinged.").EnableStdin(),
+	Arguments: []cmdsutil.Argument{
+		cmdsutil.StringArg("peer ID", true, true, "ID of peer to be pinged.").EnableStdin(),
 	},
-	Options: []cmds.Option{
-		cmds.IntOption("count", "n", "Number of ping messages to send.").Default(10),
+	Options: []cmdsutil.Option{
+		cmdsutil.IntOption("count", "n", "Number of ping messages to send.").Default(10),
 	},
 	Marshalers: cmds.MarshalerMap{
 		cmds.Text: func(res cmds.Response) (io.Reader, error) {
@@ -77,19 +78,19 @@ trip latency information.
 		ctx := req.Context()
 		n, err := req.InvocContext().GetNode()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		// Must be online!
 		if !n.OnlineMode() {
-			res.SetError(errNotOnline, cmds.ErrClient)
+			res.SetError(errNotOnline, cmdsutil.ErrClient)
 			return
 		}
 
 		addr, peerID, err := ParsePeerParam(req.Arguments()[0])
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
@@ -99,7 +100,7 @@ trip latency information.
 
 		numPings, _, err := req.Option("count").Int()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 

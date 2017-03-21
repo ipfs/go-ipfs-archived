@@ -8,21 +8,29 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 )
 
 var ActiveReqsCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "List commands run on this IPFS node.",
 		ShortDescription: `
 Lists running and recently run commands.
 `,
 	},
 	Run: func(req cmds.Request, res cmds.Response) {
-		res.SetOutput(req.InvocContext().ReqLog.Report())
+		ctx := req.InvocContext()
+		log.Debug("active reqs: ctx=", ctx)
+		reqLog := ctx.ReqLog
+		log.Debug("active reqs: reqlog=", reqLog)
+		report := reqLog.Report()
+		log.Debug("active reqs: report=", report)
+		res.SetOutput(report)
+		log.Debug("active reqs: run done")
 	},
-	Options: []cmds.Option{
-		cmds.BoolOption("verbose", "v", "Print extra information.").Default(false),
+	Options: []cmdsutil.Option{
+		cmdsutil.BoolOption("verbose", "v", "Print extra information.").Default(false),
 	},
 	Subcommands: map[string]*cmds.Command{
 		"clear":    clearInactiveCmd,
@@ -30,9 +38,14 @@ Lists running and recently run commands.
 	},
 	Marshalers: map[cmds.EncodingType]cmds.Marshaler{
 		cmds.Text: func(res cmds.Response) (io.Reader, error) {
-			out, ok := res.Output().(*[]*cmds.ReqLogEntry)
+			v := unwrapOutput(res.Output())
+			if v == nil {
+				log.Error("wrapped: %#v", res.Output())
+				return nil, cmds.ErrIncorrectType
+			}
+			out, ok := v.(*[]*cmds.ReqLogEntry)
 			if !ok {
-				log.Errorf("%#v", res.Output())
+				log.Errorf("unwrapped: %#v", v)
 				return nil, cmds.ErrIncorrectType
 			}
 			buf := new(bytes.Buffer)
@@ -86,7 +99,7 @@ Lists running and recently run commands.
 }
 
 var clearInactiveCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Clear inactive requests from the log.",
 	},
 	Run: func(req cmds.Request, res cmds.Response) {
@@ -95,16 +108,16 @@ var clearInactiveCmd = &cmds.Command{
 }
 
 var setRequestClearCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Set how long to keep inactive requests in the log.",
 	},
-	Arguments: []cmds.Argument{
-		cmds.StringArg("time", true, false, "Time to keep inactive requests in log."),
+	Arguments: []cmdsutil.Argument{
+		cmdsutil.StringArg("time", true, false, "Time to keep inactive requests in log."),
 	},
 	Run: func(req cmds.Request, res cmds.Response) {
 		tval, err := time.ParseDuration(req.Arguments()[0])
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 

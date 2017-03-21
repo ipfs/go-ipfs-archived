@@ -4,11 +4,15 @@ import (
 	"io"
 	"strings"
 
-	cmds "github.com/ipfs/go-ipfs/commands"
+	"github.com/ipfs/go-ipfs-cmds"
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
+	oldcmds "github.com/ipfs/go-ipfs/commands"
+
 	dag "github.com/ipfs/go-ipfs/core/commands/dag"
 	files "github.com/ipfs/go-ipfs/core/commands/files"
 	ocmd "github.com/ipfs/go-ipfs/core/commands/object"
 	unixfs "github.com/ipfs/go-ipfs/core/commands/unixfs"
+
 	logging "gx/ipfs/QmSpJByNKFX1sCsHBEp3R73FL4NF6FnQTEGyNAXHm2GS52/go-log"
 )
 
@@ -19,7 +23,7 @@ const (
 )
 
 var Root = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline:  "Global p2p merkle-dag filesystem.",
 		Synopsis: "ipfs [--config=<config> | -c] [--debug=<debug> | -D] [--help=<help>] [-h=<h>] [--local=<local> | -L] [--api=<api>] <command> ...",
 		Subcommands: `
@@ -77,13 +81,13 @@ The CLI will exit with one of the following values:
 1     Failed executions.
 `,
 	},
-	Options: []cmds.Option{
-		cmds.StringOption("config", "c", "Path to the configuration file to use."),
-		cmds.BoolOption("debug", "D", "Operate in debug mode.").Default(false),
-		cmds.BoolOption("help", "Show the full command help text.").Default(false),
-		cmds.BoolOption("h", "Show a short version of the command help text.").Default(false),
-		cmds.BoolOption("local", "L", "Run the command locally, instead of using the daemon.").Default(false),
-		cmds.StringOption(ApiOption, "Use a specific API instance (defaults to /ip4/127.0.0.1/tcp/5001)"),
+	Options: []cmdsutil.Option{
+		cmdsutil.StringOption("config", "c", "Path to the configuration file to use."),
+		cmdsutil.BoolOption("debug", "D", "Operate in debug mode.").Default(false),
+		cmdsutil.BoolOption("help", "Show the full command help text.").Default(false),
+		cmdsutil.BoolOption("h", "Show a short version of the command help text.").Default(false),
+		cmdsutil.BoolOption("local", "L", "Run the command locally, instead of using the daemon.").Default(false),
+		cmdsutil.StringOption(ApiOption, "Use a specific API instance (defaults to /ip4/127.0.0.1/tcp/5001)"),
 	},
 }
 
@@ -91,18 +95,21 @@ The CLI will exit with one of the following values:
 var CommandsDaemonCmd = CommandsCmd(Root)
 
 var rootSubcommands = map[string]*cmds.Command{
-	"add":       AddCmd,
-	"block":     BlockCmd,
+	"add":      AddCmd,
+	"block":    BlockCmd,
+	"cat":      CatCmd,
+	"commands": CommandsDaemonCmd,
+	"get":      GetCmd,
+}
+
+var rootOldSubcommands = map[string]*oldcmds.Command{
 	"bootstrap": BootstrapCmd,
-	"cat":       CatCmd,
-	"commands":  CommandsDaemonCmd,
 	"config":    ConfigCmd,
 	"dag":       dag.DagCmd,
 	"dht":       DhtCmd,
 	"diag":      DiagCmd,
 	"dns":       DNSCmd,
 	"files":     files.FilesCmd,
-	"get":       GetCmd,
 	"id":        IDCmd,
 	"key":       KeyCmd,
 	"log":       LogCmd,
@@ -131,27 +138,30 @@ var RootRO = &cmds.Command{}
 
 var CommandsDaemonROCmd = CommandsCmd(RootRO)
 
-var RefsROCmd = &cmds.Command{}
+var RefsROCmd = &oldcmds.Command{}
 
 var rootROSubcommands = map[string]*cmds.Command{
+	"commands": CommandsDaemonROCmd,
+	"cat":      CatCmd,
 	"block": &cmds.Command{
 		Subcommands: map[string]*cmds.Command{
 			"stat": blockStatCmd,
 			"get":  blockGetCmd,
 		},
 	},
-	"cat":      CatCmd,
-	"commands": CommandsDaemonROCmd,
-	"dns":      DNSCmd,
-	"get":      GetCmd,
-	"ls":       LsCmd,
-	"name": &cmds.Command{
-		Subcommands: map[string]*cmds.Command{
+	"get": GetCmd,
+}
+
+var rootROOldSubcommands = map[string]*oldcmds.Command{
+	"dns": DNSCmd,
+	"ls":  LsCmd,
+	"name": &oldcmds.Command{
+		Subcommands: map[string]*oldcmds.Command{
 			"resolve": IpnsCmd,
 		},
 	},
-	"object": &cmds.Command{
-		Subcommands: map[string]*cmds.Command{
+	"object": &oldcmds.Command{
+		Subcommands: map[string]*oldcmds.Command{
 			"data":  ocmd.ObjectDataCmd,
 			"links": ocmd.ObjectLinksCmd,
 			"get":   ocmd.ObjectGetCmd,
@@ -159,8 +169,8 @@ var rootROSubcommands = map[string]*cmds.Command{
 			"patch": ocmd.ObjectPatchCmd,
 		},
 	},
-	"dag": &cmds.Command{
-		Subcommands: map[string]*cmds.Command{
+	"dag": &oldcmds.Command{
+		Subcommands: map[string]*oldcmds.Command{
 			"get": dag.DagGetCmd,
 		},
 	},
@@ -175,9 +185,12 @@ func init() {
 
 	// sanitize readonly refs command
 	*RefsROCmd = *RefsCmd
-	RefsROCmd.Subcommands = map[string]*cmds.Command{}
+	RefsROCmd.Subcommands = map[string]*oldcmds.Command{}
 
+	Root.OldSubcommands = rootOldSubcommands
 	Root.Subcommands = rootSubcommands
+
+	RootRO.OldSubcommands = rootROOldSubcommands
 	RootRO.Subcommands = rootROSubcommands
 }
 
@@ -185,6 +198,7 @@ type MessageOutput struct {
 	Message string
 }
 
-func MessageTextMarshaler(res cmds.Response) (io.Reader, error) {
-	return strings.NewReader(res.Output().(*MessageOutput).Message), nil
+func MessageTextMarshaler(res oldcmds.Response) (io.Reader, error) {
+	v := unwrapOutput(res.Output())
+	return strings.NewReader(v.(*MessageOutput).Message), nil
 }

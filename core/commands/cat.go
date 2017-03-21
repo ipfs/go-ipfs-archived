@@ -1,9 +1,12 @@
 package commands
 
 import (
+	"fmt"
 	"io"
+	"os"
 
-	cmds "github.com/ipfs/go-ipfs/commands"
+	cmds "github.com/ipfs/go-ipfs-cmds"
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	core "github.com/ipfs/go-ipfs/core"
 	coreunix "github.com/ipfs/go-ipfs/core/coreunix"
 
@@ -13,55 +16,90 @@ import (
 const progressBarMinSize = 1024 * 1024 * 8 // show progress bar for outputs > 8MiB
 
 var CatCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline:          "Show IPFS object data.",
 		ShortDescription: "Displays the data contained by an IPFS or IPNS object(s) at the given path.",
 	},
 
-	Arguments: []cmds.Argument{
-		cmds.StringArg("ipfs-path", true, true, "The path to the IPFS object(s) to be outputted.").EnableStdin(),
+	Arguments: []cmdsutil.Argument{
+		cmdsutil.StringArg("ipfs-path", true, true, "The path to the IPFS object(s) to be outputted.").EnableStdin(),
 	},
-	Run: func(req cmds.Request, res cmds.Response) {
+	Run: func(req cmds.Request, re cmds.ResponseEmitter) {
+		log.Debugf("cat: RespEm type is %T", re)
 		node, err := req.InvocContext().GetNode()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			re.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		if !node.OnlineMode() {
 			if err := node.SetupOfflineRouting(); err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				re.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 		}
 
 		readers, length, err := cat(req.Context(), node, req.Arguments())
+		log.Debug("cat returned ", err)
+
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			re.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		/*
 			if err := corerepo.ConditionalGC(req.Context(), node, length); err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 		*/
 
-		res.SetLength(length)
+		re.SetLength(length)
 
 		reader := io.MultiReader(readers...)
-		res.SetOutput(reader)
+		re.Emit(reader)
+		re.Close()
 	},
-	PostRun: func(req cmds.Request, res cmds.Response) {
-		if res.Length() < progressBarMinSize {
-			return
-		}
+	PostRun: map[cmds.EncodingType]func(cmds.Request, cmds.ResponseEmitter) cmds.ResponseEmitter{
+		cmds.CLI: func(req cmds.Request, re cmds.ResponseEmitter) cmds.ResponseEmitter {
+			re_, res := cmds.NewChanResponsePair(req)
 
-		bar, reader := progressBarForReader(res.Stderr(), res.Output().(io.Reader), int64(res.Length()))
-		bar.Start()
+			go func() {
+				if res.Length() > 0 && res.Length() < progressBarMinSize {
+					log.Debugf("cat/res.Length() == %v < progressBarMinSize", res.Length())
+					cmds.Copy(re, res)
+					return
+				}
 
-		res.SetOutput(reader)
+				// Copy closes by itself, so we must not do this before
+				defer re.Close()
+
+				v, err := res.Next()
+				log.Debugf("cat/res.Next() returned (%v, %v)", v, err)
+				if err != nil {
+					if err == cmds.ErrRcvdError {
+						re.SetError(res.Error().Message, res.Error().Code)
+					} else {
+						re.SetError(res.Error(), cmdsutil.ErrNormal)
+					}
+
+					return
+				}
+
+				r, ok := v.(io.Reader)
+				if !ok {
+					re.SetError(fmt.Sprintf("expected io.Reader, not %T", v), cmdsutil.ErrNormal)
+					return
+				}
+
+				bar, reader := progressBarForReader(os.Stderr, r, int64(res.Length()))
+				bar.Start()
+
+				re.Emit(reader)
+			}()
+
+			return re_
+		},
 	},
 }
 

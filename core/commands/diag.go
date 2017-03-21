@@ -8,6 +8,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 	diag "github.com/ipfs/go-ipfs/diagnostics"
 )
@@ -41,7 +42,7 @@ type DiagnosticOutput struct {
 var DefaultDiagnosticTimeout = time.Second * 20
 
 var DiagCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Generate diagnostic reports.",
 	},
 
@@ -53,7 +54,7 @@ var DiagCmd = &cmds.Command{
 }
 
 var diagNetCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Generate a network diagnostics report.",
 		ShortDescription: `
 Sends out a message to each node in the network recursively
@@ -87,38 +88,38 @@ that consume the dot format to generate graphs of the network.
 `,
 	},
 
-	Options: []cmds.Option{
-		cmds.StringOption("vis", "Output format. One of: "+strings.Join(visFmts, ", ")).Default(visText),
+	Options: []cmdsutil.Option{
+		cmdsutil.StringOption("vis", "Output format. One of: "+strings.Join(visFmts, ", ")).Default(visText),
 	},
 
 	Run: func(req cmds.Request, res cmds.Response) {
 		n, err := req.InvocContext().GetNode()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		if !n.OnlineMode() {
-			res.SetError(errNotOnline, cmds.ErrClient)
+			res.SetError(errNotOnline, cmdsutil.ErrClient)
 			return
 		}
 
 		vis, _, err := req.Option("vis").String()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		timeoutS, _, err := req.Option("timeout").String()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 		timeout := DefaultDiagnosticTimeout
 		if timeoutS != "" {
 			t, err := time.ParseDuration(timeoutS)
 			if err != nil {
-				res.SetError(errors.New("error parsing timeout"), cmds.ErrNormal)
+				res.SetError(errors.New("error parsing timeout"), cmdsutil.ErrNormal)
 				return
 			}
 			timeout = t
@@ -126,7 +127,7 @@ that consume the dot format to generate graphs of the network.
 
 		info, err := n.Diagnostics.GetDiagnostic(req.Context(), timeout)
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
@@ -138,19 +139,19 @@ that consume the dot format to generate graphs of the network.
 			w := diag.DotWriter{W: buf}
 			err := w.WriteGraph(info)
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 			res.SetOutput(io.Reader(buf))
 		case visText:
 			output, err := stdDiagOutputMarshal(standardDiagOutput(info))
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 			res.SetOutput(output)
 		default:
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 	},

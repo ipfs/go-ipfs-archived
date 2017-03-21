@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 	config "github.com/ipfs/go-ipfs/repo/config"
 	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
@@ -13,7 +14,7 @@ import (
 )
 
 var tourCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Provide an introduction to IPFS.",
 		ShortDescription: `
 This is a tour that takes you through various IPFS concepts,
@@ -24,8 +25,8 @@ IPFS very quickly. To start, run:
 `,
 	},
 
-	Arguments: []cmds.Argument{
-		cmds.StringArg("id", false, false, "The id of the topic you would like to tour."),
+	Arguments: []cmdsutil.Argument{
+		cmdsutil.StringArg("id", false, false, "The id of the topic you would like to tour."),
 	},
 	Subcommands: map[string]*cmds.Command{
 		"list":    cmdIpfsTourList,
@@ -39,7 +40,7 @@ func tourRunFunc(req cmds.Request, res cmds.Response) {
 
 	cfg, err := req.InvocContext().GetConfig()
 	if err != nil {
-		res.SetError(err, cmds.ErrNormal)
+		res.SetError(err, cmdsutil.ErrNormal)
 		return
 	}
 
@@ -72,7 +73,7 @@ func tourRunFunc(req cmds.Request, res cmds.Response) {
 }
 
 var cmdIpfsTourNext = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Show the next IPFS Tour topic.",
 	},
 
@@ -81,18 +82,18 @@ var cmdIpfsTourNext = &cmds.Command{
 		path := req.InvocContext().ConfigRoot
 		cfg, err := req.InvocContext().GetConfig()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		id := tour.NextTopic(tour.TopicID(cfg.Tour.Last))
 		topic, err := tourGet(id)
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 		if err := fprintTourShow(w, topic); err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
@@ -101,7 +102,7 @@ var cmdIpfsTourNext = &cmds.Command{
 			cfg.Tour.Last = string(id)
 			err := writeConfig(path, cfg)
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 		}
@@ -111,7 +112,7 @@ var cmdIpfsTourNext = &cmds.Command{
 }
 
 var cmdIpfsTourRestart = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Restart the IPFS Tour.",
 	},
 
@@ -119,28 +120,28 @@ var cmdIpfsTourRestart = &cmds.Command{
 		path := req.InvocContext().ConfigRoot
 		cfg, err := req.InvocContext().GetConfig()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		cfg.Tour.Last = ""
 		err = writeConfig(path, cfg)
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 	},
 }
 
 var cmdIpfsTourList = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Show a list of IPFS Tour topics.",
 	},
 
 	Run: func(req cmds.Request, res cmds.Response) {
 		cfg, err := req.InvocContext().GetConfig()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 

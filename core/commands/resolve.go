@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 	"github.com/ipfs/go-ipfs/core"
 	ns "github.com/ipfs/go-ipfs/namesys"
@@ -16,7 +17,7 @@ type ResolvedPath struct {
 }
 
 var ResolveCmd = &cmds.Command{
-	Helptext: cmds.HelpText{
+	Helptext: cmdsutil.HelpText{
 		Tagline: "Resolve the value of names to IPFS.",
 		ShortDescription: `
 There are a number of mutable name protocols that can link among
@@ -55,24 +56,24 @@ Resolve the value of an IPFS DAG path:
 `,
 	},
 
-	Arguments: []cmds.Argument{
-		cmds.StringArg("name", true, false, "The name to resolve.").EnableStdin(),
+	Arguments: []cmdsutil.Argument{
+		cmdsutil.StringArg("name", true, false, "The name to resolve.").EnableStdin(),
 	},
-	Options: []cmds.Option{
-		cmds.BoolOption("recursive", "r", "Resolve until the result is an IPFS name.").Default(false),
+	Options: []cmdsutil.Option{
+		cmdsutil.BoolOption("recursive", "r", "Resolve until the result is an IPFS name.").Default(false),
 	},
 	Run: func(req cmds.Request, res cmds.Response) {
 
 		n, err := req.InvocContext().GetNode()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		if !n.OnlineMode() {
 			err := n.SetupOfflineRouting()
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 		}
@@ -85,7 +86,7 @@ Resolve the value of an IPFS DAG path:
 			p, err := n.Namesys.ResolveN(req.Context(), name, 1)
 			// ErrResolveRecursion is fine
 			if err != nil && err != ns.ErrResolveRecursion {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 			res.SetOutput(&ResolvedPath{p})
@@ -95,13 +96,13 @@ Resolve the value of an IPFS DAG path:
 		// else, ipfs path or ipns with recursive flag
 		p, err := path.ParsePath(name)
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
 		node, err := core.Resolve(req.Context(), n.Namesys, n.Resolver, p)
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			res.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 
@@ -111,7 +112,8 @@ Resolve the value of an IPFS DAG path:
 	},
 	Marshalers: cmds.MarshalerMap{
 		cmds.Text: func(res cmds.Response) (io.Reader, error) {
-			output, ok := res.Output().(*ResolvedPath)
+			ch := res.Output().(chan interface{})
+			output, ok := (<-ch).(*ResolvedPath)
 			if !ok {
 				return nil, u.ErrCast()
 			}
