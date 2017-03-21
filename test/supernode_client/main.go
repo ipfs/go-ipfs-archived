@@ -12,8 +12,8 @@ import (
 	gopath "path"
 	"time"
 
+	commands "github.com/ipfs/go-ipfs-cmds"
 	random "github.com/ipfs/go-ipfs/Godeps/_workspace/src/github.com/jbenet/go-random"
-	commands "github.com/ipfs/go-ipfs/commands"
 	core "github.com/ipfs/go-ipfs/core"
 	corehttp "github.com/ipfs/go-ipfs/core/corehttp"
 	corerouting "github.com/ipfs/go-ipfs/core/corerouting"
