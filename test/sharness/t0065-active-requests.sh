@@ -9,7 +9,7 @@ test_description="Test active request commands"
 . lib/test-lib.sh
 
 test_init_ipfs
-test_launch_ipfs_daemon
+test_launch_ipfs_daemon -D
 
 test_expect_success "command works" '
 	ipfs diag cmds > cmd_out

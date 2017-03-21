@@ -18,10 +18,12 @@ test_init_ipfs
 NUM_NODES=3
 test_expect_success 'init iptb' '
   iptb init -n $NUM_NODES -f --bootstrap=none --port=0 &&
-  startup_cluster $NUM_NODES
+  startup_cluster $NUM_NODES -D
 '
 
+
 # pre-mount publish
+echo 'hello warld' | ipfsi 0 add -D
 HASH=$(echo 'hello warld' | ipfsi 0 add -q)
 test_expect_success "can publish before mounting /ipns" '
   ipfsi 0 name publish '$HASH'

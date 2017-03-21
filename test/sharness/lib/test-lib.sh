@@ -243,7 +243,7 @@ test_mount_ipfs() {
 	test_expect_success FUSE "'ipfs mount' succeeds" '
 		do_umount "$(pwd)/ipfs" || true &&
 		do_umount "$(pwd)/ipns" || true &&
-		ipfs mount >actual
+		ipfs mount -D >actual 2>mount_err
 	'
 
 	test_expect_success FUSE "'ipfs mount' output looks good" '
@@ -257,8 +257,10 @@ test_mount_ipfs() {
 test_launch_ipfs_daemon_and_mount() {
 
 	test_init_ipfs
-	test_launch_ipfs_daemon
-	test_mount_ipfs
+	sleep 1
+	test_launch_ipfs_daemon -D
+	sleep 1
+	test_mount_ipfs -D
 
 }
 

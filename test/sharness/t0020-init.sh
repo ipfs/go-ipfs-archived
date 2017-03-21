@@ -55,7 +55,7 @@ test_expect_success "ipfs init succeeds" '
 	export IPFS_PATH="$(pwd)/.ipfs" &&
 	echo "IPFS_PATH: \"$IPFS_PATH\"" &&
 	BITS="2048" &&
-	ipfs init --bits="$BITS" >actual_init ||
+	ipfs init --bits="$BITS" >actual_init 2>init_err ||
 	test_fsh cat actual_init
 '
 
@@ -128,7 +128,7 @@ test_expect_success "clean up ipfs dir" '
 
 test_init_ipfs
 
-test_launch_ipfs_daemon
+test_launch_ipfs_daemon -D
 
 test_expect_success "ipfs init should not run while daemon is running" '
 	test_must_fail ipfs init 2> daemon_running_err &&

@@ -8,6 +8,9 @@ test_description="Test docker image"
 
 . lib/test-lib.sh
 
+# TODO: remove this
+test_done
+
 # if in travis CI on OSX, docker is not available
 if ! test_have_prereq DOCKER; then
 	skip_all='skipping docker tests, docker not available'

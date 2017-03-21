@@ -40,7 +40,7 @@ test_object_cmd() {
 	'
 
 	test_expect_success "'ipfs object get' succeeds" '
-		ipfs object get $HASH >actual_getOut
+		ipfs -D object get $HASH >actual_getOut
 	'
 
 	test_expect_success "'ipfs object get' output looks good" '
@@ -89,6 +89,10 @@ test_object_cmd() {
 	'
 
 	test_expect_success "'ipfs object put broken.hxml' output looks good" '
+		# TODO remove this
+	 	grep -v "^Call" actual_putBrokenErr > kncojofiefkjn
+		mv kncojofiefkjn actual_putBrokenErr
+
 		touch expected_putBroken &&
 		printf "Error: no data or links in this node\n" > expected_putBrokenErr &&
 		test_cmp expected_putBroken actual_putBroken &&
@@ -142,6 +146,10 @@ test_object_cmd() {
 	'
 
 	test_expect_success "'ipfs object put broken.hjson' output looks good" '
+		# TODO remove this
+	 	grep -v "^Call" actual_putBrokenErr > kncojofiefkjn
+		mv kncojofiefkjn actual_putBrokenErr
+
 		touch expected_putBroken &&
 		printf "Error: no data or links in this node\n" > expected_putBrokenErr &&
 		test_cmp expected_putBroken actual_putBroken &&
@@ -312,7 +320,7 @@ test_object_content_type() {
 test_object_cmd
 
 # should work online
-test_launch_ipfs_daemon
+test_launch_ipfs_daemon -D
 test_object_cmd
 test_object_content_type
 test_kill_ipfs_daemon

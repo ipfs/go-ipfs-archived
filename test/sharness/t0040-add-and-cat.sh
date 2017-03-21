@@ -20,7 +20,7 @@ test_add_cat_file() {
 
     test_expect_success "ipfs add succeeds" '
     	echo "Hello Worlds!" >mountdir/hello.txt &&
-        ipfs add mountdir/hello.txt >actual
+				ipfs add -D mountdir/hello.txt >actual 2>add_err
     '
 
     test_expect_success "ipfs add output looks good" '
@@ -189,8 +189,8 @@ test_add_named_pipe() {
     err_prefix=$1
     test_expect_success "useful error message when adding a named pipe" '
       mkfifo named-pipe &&
-	    test_expect_code 1 ipfs -D add named-pipe 2>add_fifo_debug &&
-	    test_expect_code 1 ipfs add named-pipe 2>actual &&
+      test_expect_code 1 ipfs -D add named-pipe 2>add_fifo_debug &&
+      test_expect_code 1 ipfs add named-pipe 2>actual &&
       grep "Error: Unrecognized file type for named-pipe: $(generic_stat named-pipe)" actual >/dev/null &&
       rm named-pipe &&
       grep USAGE actual >/dev/null &&

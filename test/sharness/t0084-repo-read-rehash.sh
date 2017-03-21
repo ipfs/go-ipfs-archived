@@ -36,7 +36,7 @@ test_check_bad_blocks() {
 	'
 
 	test_expect_success "block shows up in repo verify" '
-		test_expect_code 1 ipfs repo verify > verify_out &&
+		test_expect_code 1 ipfs repo -D verify >verify_out 2>verify_err &&
 		grep "$H_BLOCK2" verify_out
 	'
 }
@@ -48,7 +48,7 @@ test_expect_success "can add and cat a raw-leaf file" '
 	ipfs cat $HASH > /dev/null
 '
 
-test_launch_ipfs_daemon
+test_launch_ipfs_daemon -D
 test_check_bad_blocks
 test_kill_ipfs_daemon
 

@@ -92,6 +92,7 @@ test_config_cmd() {
   # Those tests are here to prevent exposing the PrivKey on the network
 
   test_expect_success "'ipfs config Identity' fails" '
+       test_expect_code 1 ipfs -D config Identity 2> ident_debug
        test_expect_code 1 ipfs config Identity 2> ident_out
   '
 
@@ -159,7 +160,7 @@ test_init_ipfs
 test_config_cmd
 
 # should work online
-test_launch_ipfs_daemon
+test_launch_ipfs_daemon -D
 test_config_cmd
 test_kill_ipfs_daemon
 

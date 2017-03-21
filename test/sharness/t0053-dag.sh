@@ -73,7 +73,7 @@ test_dag_cmd() {
 	'
 
 	test_expect_success "after gc, objects still acessible" '
-		ipfs repo gc > /dev/null &&
+		ipfs -D repo gc > /dev/null &&
 		ipfs refs -r --timeout=2s $EXPHASH > /dev/null
 	'
 

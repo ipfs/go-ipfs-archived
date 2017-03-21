@@ -25,7 +25,7 @@ startup_cluster() {
 
 	if test -n "$other_args"; then
 		test_expect_success "start up nodes with additional args" '
-			iptb start --args $other_args
+			iptb start --args "$other_args"
 		'
 	else
 		test_expect_success "start up nodes" '

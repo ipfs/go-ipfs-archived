@@ -58,6 +58,7 @@ test_expect_success "mount directories cannot be removed while active" '
 '
 
 test_expect_success "unmount directories" '
+	sleep 1
   do_umount "$(pwd)/ipfs" &&
   do_umount "$(pwd)/ipns"
 '

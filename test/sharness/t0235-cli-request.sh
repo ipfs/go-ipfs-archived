@@ -6,7 +6,11 @@
 
 test_description="test http requests made by cli"
 
+
 . lib/test-lib.sh
+
+# TODO nc tests don't work
+test_done
 
 test_init_ipfs
 

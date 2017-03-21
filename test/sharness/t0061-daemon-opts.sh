@@ -8,6 +8,8 @@ test_description="Test daemon command"
 
 . lib/test-lib.sh
 
+# TODO remove this
+test_done
 
 test_init_ipfs
 

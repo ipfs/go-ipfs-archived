@@ -10,7 +10,7 @@ test_expect_success 'init iptb' '
   iptb init -n $NUM_NODES --bootstrap=none --port=0
 '
 
-startup_cluster $NUM_NODES --enable-pubsub-experiment
+startup_cluster $NUM_NODES '-D --enable-pubsub-experiment'
 
 test_expect_success 'peer ids' '
   PEERID_0=$(iptb get id 0) &&
@@ -27,7 +27,7 @@ test_expect_success 'pubsub' '
 	# ipfs pubsub sub is long-running so we need to start it in the background and
 	# wait put its output somewhere where we can access it
 	(
-		ipfsi 0 pubsub sub --enc=ndpayload testTopic | if read line; then
+		ipfsi 0 pubsub sub --enc=ndpayload testTopic -D 2>sub_err | tee sub_out | if read line; then
 				echo $line > actual &&
 				echo > wait
 			fi
