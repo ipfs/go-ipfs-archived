@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ipfs/go-ipfs/commands/files"
+	"github.com/ipfs/go-ipfs-cmds/files"
 	bal "github.com/ipfs/go-ipfs/importer/balanced"
 	"github.com/ipfs/go-ipfs/importer/chunk"
 	h "github.com/ipfs/go-ipfs/importer/helpers"

@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ipfs/go-ipfs/commands/files"
+	"github.com/ipfs/go-ipfs-cmds/files"
 	"github.com/ipfs/go-ipfs/importer/chunk"
 	dag "github.com/ipfs/go-ipfs/merkledag"
 
