@@ -4,6 +4,7 @@
 package commands
 
 import (
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	cmds "github.com/ipfs/go-ipfs/commands"
 )
 

@@ -86,13 +86,13 @@ into an object of the specified format.
 		case "raw":
 			nd, err := convertRawToType(fi, format)
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 
 			c, err := n.DAG.Add(nd)
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 
@@ -150,7 +150,7 @@ var DagGetCmd = &cmds.Command{
 		if len(rem) > 0 {
 			final, _, err := obj.Resolve(rem)
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 			out = final

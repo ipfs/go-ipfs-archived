@@ -175,6 +175,7 @@ func mainRet() int {
 	}
 
 	// everything went better than expected :)
+	return 0
 }
 
 func (i *cmdInvocation) Run(ctx context.Context) error {

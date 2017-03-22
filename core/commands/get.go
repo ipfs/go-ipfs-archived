@@ -53,7 +53,7 @@ may also specify the level of compression by specifying '-l=<1-9>'.
 	},
 	Run: func(req cmds.Request, re cmds.ResponseEmitter) {
 		if len(req.Arguments()) == 0 {
-			re.SetError(errors.New("not enough arugments provided"), cmds.ErrClient)
+			re.SetError(errors.New("not enough arugments provided"), cmdsutil.ErrClient)
 			return
 		}
 		cmplvl, err := getCompressOptions(req)
@@ -79,15 +79,15 @@ may also specify the level of compression by specifying '-l=<1-9>'.
 		case *dag.ProtoNode:
 			size, err := dn.Size()
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				re.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 
-			res.SetLength(size)
+			re.SetLength(size)
 		case *dag.RawNode:
-			res.SetLength(uint64(len(dn.RawData())))
+			re.SetLength(uint64(len(dn.RawData())))
 		default:
-			res.SetError(fmt.Errorf("'ipfs get' only supports unixfs nodes"), cmds.ErrNormal)
+			re.SetError(fmt.Errorf("'ipfs get' only supports unixfs nodes"), cmdsutil.ErrNormal)
 			return
 		}
 
@@ -109,26 +109,35 @@ may also specify the level of compression by specifying '-l=<1-9>'.
 
 				v, err := res.Next()
 				if err != nil {
+					//TODO XXX
+				}
 
-					cmplvl, err := getCompressOptions(req)
-					if err != nil {
-						re.SetError(err, cmdsutil.ErrClient)
-						return
-					}
+				outReader := v.(io.Reader)
 
-					archive, _, _ := req.Option("archive").Bool()
+				outPath, _, _ := req.Option("output").String()
+				if len(outPath) == 0 {
+					_, outPath = gopath.Split(req.Arguments()[0])
+					outPath = gopath.Clean(outPath)
+				}
 
-					gw := getWriter{
-						Out:         os.Stdout,
-						Err:         os.Stderr,
-						Archive:     archive,
-						Compression: cmplvl,
-						Size:        int64(res.Length()),
-					}
+				cmplvl, err := getCompressOptions(req)
+				if err != nil {
+					re.SetError(err, cmdsutil.ErrClient)
+					return
+				}
 
-					if err := gw.Write(outReader, outPath); err != nil {
-						re.SetError(err, cmdsutil.ErrNormal)
-					}
+				archive, _, _ := req.Option("archive").Bool()
+
+				gw := getWriter{
+					Out:         os.Stdout,
+					Err:         os.Stderr,
+					Archive:     archive,
+					Compression: cmplvl,
+					Size:        int64(res.Length()),
+				}
+
+				if err := gw.Write(outReader, outPath); err != nil {
+					re.SetError(err, cmdsutil.ErrNormal)
 				}
 			}()
 

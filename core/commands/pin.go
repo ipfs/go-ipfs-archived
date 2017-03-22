@@ -89,7 +89,7 @@ var addPinCmd = &cmds.Command{
 			defer close(ch)
 			added, err := corerepo.Pin(n, ctx, req.Arguments(), recursive)
 			if err != nil {
-				res.SetError(err, cmds.ErrNormal)
+				res.SetError(err, cmdsutil.ErrNormal)
 				return
 			}
 			ch <- added
@@ -115,7 +115,7 @@ var addPinCmd = &cmds.Command{
 				case <-ticker.C:
 					out <- &AddPinOutput{Progress: v.Value()}
 				case <-ctx.Done():
-					res.SetError(ctx.Err(), cmds.ErrNormal)
+					res.SetError(ctx.Err(), cmdsutil.ErrNormal)
 					return
 				}
 			}

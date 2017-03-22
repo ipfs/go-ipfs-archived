@@ -13,7 +13,7 @@ import (
 	util "github.com/ipfs/go-ipfs/blocks/blockstore/util"
 
 	cid "gx/ipfs/QmV5gPoRsjN1Gid3LMdNZTyfCtP2DsvqEbMAmz82RmmiGk/go-cid"
-	u "gx/ipfs/QmZuY8aV7zbNXVy6DyN9SmnuH3o9nG852F4aTiSBpts8d1/go-ipfs-util"
+	//u "gx/ipfs/QmZuY8aV7zbNXVy6DyN9SmnuH3o9nG852F4aTiSBpts8d1/go-ipfs-util"
 	mh "gx/ipfs/QmbZ6Cee2uHjG7hf19qLHppgKDRtaG4CVtMzdmK9VCVqLu/go-multihash"
 )
 
@@ -308,14 +308,13 @@ It takes a list of base58 encoded multihashs to remove.
 					someFailed bool
 				)
 
-				defer log.Debug("PostRun goroutine returns ", err)
-
 				for {
 					v, err = res.Next()
+					log.Debugf("PostRun.go.for: Next returned %#v, %v ", v, err)
 
 					if err != nil {
 						if err == io.EOF || err.Error() == "EOF" {
-							return
+							break
 						}
 
 						if err == cmds.ErrRcvdError {
@@ -327,12 +326,15 @@ It takes a list of base58 encoded multihashs to remove.
 						} else {
 							re.SetError(err, cmdsutil.ErrNormal)
 						}
+
 						return
 					}
 
 					r := v.(*util.RemovedBlock)
 					if r.Hash == "" && r.Error != "" {
 						fmt.Fprintf(os.Stderr, "aborted: %s\n", r.Error)
+						someFailed = true
+						break
 					} else if r.Error != "" {
 						someFailed = true
 						fmt.Fprintf(os.Stderr, "cannot remove %s: %s\n", r.Hash, r.Error)
@@ -342,6 +344,7 @@ It takes a list of base58 encoded multihashs to remove.
 				}
 
 				if someFailed {
+					log.Debugf("PostRun.go.if: some failed, sending error")
 					re.SetError("some blocks not removed", cmdsutil.ErrNormal)
 				}
 			}()

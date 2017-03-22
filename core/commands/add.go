@@ -6,8 +6,6 @@ import (
 	"io"
 	"os"
 
-	"gx/ipfs/QmeWjRodbcZFKe5tMN7poEx3izym6osrLSnTLf9UjJZBbs/pb"
-
 	"github.com/ipfs/go-ipfs-cmds"
 	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
 	"github.com/ipfs/go-ipfs-cmds/files"
@@ -22,7 +20,7 @@ import (
 	mfs "github.com/ipfs/go-ipfs/mfs"
 	ft "github.com/ipfs/go-ipfs/unixfs"
 
-	u "gx/ipfs/QmZuY8aV7zbNXVy6DyN9SmnuH3o9nG852F4aTiSBpts8d1/go-ipfs-util"
+	//u "gx/ipfs/QmZuY8aV7zbNXVy6DyN9SmnuH3o9nG852F4aTiSBpts8d1/go-ipfs-util"
 	"gx/ipfs/QmeWjRodbcZFKe5tMN7poEx3izym6osrLSnTLf9UjJZBbs/pb"
 )
 
@@ -142,7 +140,7 @@ You can now refer to the added file in a gateway, like so:
 
 		cfg, err := n.Repo.Config()
 		if err != nil {
-			res.SetError(err, cmds.ErrNormal)
+			re.SetError(err, cmdsutil.ErrNormal)
 			return
 		}
 		// check if repo will exceed storage limit if added
@@ -166,8 +164,8 @@ You can now refer to the added file in a gateway, like so:
 		fscache, _, _ := req.Option(fstoreCacheOptionName).Bool()
 
 		if nocopy && !cfg.Experimental.FilestoreEnabled {
-			res.SetError(errors.New("filestore is not enabled, see https://git.io/vy4XN"),
-				cmds.ErrClient)
+			re.SetError(errors.New("filestore is not enabled, see https://git.io/vy4XN"),
+				cmdsutil.ErrClient)
 			return
 		}
 
@@ -176,7 +174,7 @@ You can now refer to the added file in a gateway, like so:
 		}
 
 		if nocopy && !rawblks {
-			res.SetError(fmt.Errorf("nocopy option requires '--raw-leaves' to be enabled as well"), cmds.ErrNormal)
+			re.SetError(fmt.Errorf("nocopy option requires '--raw-leaves' to be enabled as well"), cmdsutil.ErrNormal)
 			return
 		}
 
@@ -325,7 +323,7 @@ You can now refer to the added file in a gateway, like so:
 					case out, ok := <-outChan:
 						if !ok {
 							if quieter {
-								fmt.Fprintln(res.Stdout(), lastHash)
+								fmt.Fprintln(os.Stdout, lastHash)
 							}
 
 							break LOOP
