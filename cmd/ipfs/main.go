@@ -17,14 +17,17 @@ import (
 	"syscall"
 	"time"
 
-	cmds "github.com/ipfs/go-ipfs/commands"
-	cmdsCli "github.com/ipfs/go-ipfs/commands/cli"
-	cmdsHttp "github.com/ipfs/go-ipfs/commands/http"
+	"github.com/ipfs/go-ipfs-cmds"
+	"github.com/ipfs/go-ipfs-cmds/cli"
+	"github.com/ipfs/go-ipfs-cmds/cmdsutil"
+	"github.com/ipfs/go-ipfs-cmds/http"
+
 	core "github.com/ipfs/go-ipfs/core"
 	coreCmds "github.com/ipfs/go-ipfs/core/commands"
-	repo "github.com/ipfs/go-ipfs/repo"
-	config "github.com/ipfs/go-ipfs/repo/config"
-	fsrepo "github.com/ipfs/go-ipfs/repo/fsrepo"
+
+	"github.com/ipfs/go-ipfs/repo"
+	"github.com/ipfs/go-ipfs/repo/config"
+	"github.com/ipfs/go-ipfs/repo/fsrepo"
 
 	ma "gx/ipfs/QmSWLfmj5frN9xVLMMN846dMDriy5wN5jeghUm7aTW3DAG/go-multiaddr"
 	logging "gx/ipfs/QmSpJByNKFX1sCsHBEp3R73FL4NF6FnQTEGyNAXHm2GS52/go-log"
@@ -55,6 +58,7 @@ type cmdInvocation struct {
 	cmd  *cmds.Command
 	req  cmds.Request
 	node *core.IpfsNode
+	w    io.WriteCloser
 }
 
 // main roadmap:
@@ -90,9 +94,9 @@ func mainRet() int {
 	// this is a local helper to print out help text.
 	// there's some considerations that this makes easier.
 	printHelp := func(long bool, w io.Writer) {
-		helpFunc := cmdsCli.ShortHelp
+		helpFunc := cli.ShortHelp
 		if long {
-			helpFunc = cmdsCli.LongHelp
+			helpFunc = cli.LongHelp
 		}
 
 		helpFunc("ipfs", Root, invoc.path, w)
@@ -113,6 +117,8 @@ func mainRet() int {
 			os.Args[1] = "version"
 		}
 	}
+
+	invoc.w = os.Stdout
 
 	// parse the commandline into a command invocation
 	parseErr := invoc.Parse(ctx, os.Args[1:])
@@ -157,7 +163,7 @@ func mainRet() int {
 	intrh, ctx := invoc.SetupInterruptHandler(ctx)
 	defer intrh.Close()
 
-	output, err := invoc.Run(ctx)
+	err = invoc.Run(ctx)
 	if err != nil {
 		printErr(err)
 
@@ -169,20 +175,14 @@ func mainRet() int {
 	}
 
 	// everything went better than expected :)
-	_, err = io.Copy(os.Stdout, output)
-	if err != nil {
-		printErr(err)
-		return 1
-	}
-	return 0
 }
 
-func (i *cmdInvocation) Run(ctx context.Context) (output io.Reader, err error) {
+func (i *cmdInvocation) Run(ctx context.Context) error {
 
 	// check if user wants to debug. option OR env var.
 	debug, _, err := i.req.Option("debug").Bool()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if debug || os.Getenv("IPFS_LOGGING") == "debug" {
 		u.Debug = true
@@ -192,16 +192,8 @@ func (i *cmdInvocation) Run(ctx context.Context) (output io.Reader, err error) {
 		u.Debug = true
 	}
 
-	res, err := callCommand(ctx, i.req, Root, i.cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := res.Error(); err != nil {
-		return nil, err
-	}
-
-	return res.Reader()
+	err = callCommand(ctx, i.req, Root, i.cmd, i.w)
+	return err
 }
 
 func (i *cmdInvocation) constructNodeFunc(ctx context.Context) func() (*core.IpfsNode, error) {
@@ -248,7 +240,7 @@ func (i *cmdInvocation) close() {
 func (i *cmdInvocation) Parse(ctx context.Context, args []string) error {
 	var err error
 
-	i.req, i.cmd, i.path, err = cmdsCli.Parse(args, os.Stdin, Root)
+	i.req, i.cmd, i.path, err = cli.Parse(args, os.Stdin, Root)
 	if err != nil {
 		return err
 	}
@@ -270,7 +262,7 @@ func (i *cmdInvocation) Parse(ctx context.Context, args []string) error {
 	// if no encoding was specified by user, default to plaintext encoding
 	// (if command doesn't support plaintext, use JSON instead)
 	if !i.req.Option("encoding").Found() {
-		if i.req.Command().Marshalers != nil && i.req.Command().Marshalers[cmds.Text] != nil {
+		if i.req.Command().Encoders != nil && i.req.Command().Encoders[cmds.Text] != nil {
 			i.req.SetOption("encoding", cmds.Text)
 		} else {
 			i.req.SetOption("encoding", cmds.JSON)
@@ -300,65 +292,132 @@ func callPreCommandHooks(ctx context.Context, details cmdDetails, req cmds.Reque
 	return nil
 }
 
-func callCommand(ctx context.Context, req cmds.Request, root *cmds.Command, cmd *cmds.Command) (cmds.Response, error) {
+func callCommand(ctx context.Context, req cmds.Request, root *cmds.Command, cmd *cmds.Command, w io.WriteCloser) error {
 	log.Info(config.EnvDir, " ", req.InvocContext().ConfigRoot)
-	var res cmds.Response
 
 	err := req.SetRootContext(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	details, err := commandDetails(req.Path(), root)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	client, err := commandShouldRunOnDaemon(*details, req, root)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = callPreCommandHooks(ctx, *details, req, root)
 	if err != nil {
-		return nil, err
+		return err
 	}
+
+	encTypeStr, found, err := req.Option("encoding").String()
+	if !found || err != nil {
+		panic("omg wtf " + err.Error())
+	}
+	encType := cmds.EncodingType(encTypeStr)
+
+	log.Debug("creating RE with encType ", encType)
+
+	var (
+		re    cmds.ResponseEmitter
+		errCh <-chan *cmdsutil.Error
+	)
+
+	if enc, ok := cmd.Encoders[encType]; ok {
+		re, errCh = cli.NewResponseEmitter(w, enc, req)
+	} else if enc, ok := cmds.Encoders[encType]; ok {
+		re, errCh = cli.NewResponseEmitter(w, enc, req)
+	} else {
+		// TODO I guess this can simply be removed
+		panic("omg couldn't find fitting encoder D:")
+	}
+
+	log.Debugf("initial cli.RE uses global encoder for %s(%v)", encTypeStr, cmd.Encoders[cmds.EncodingType(encTypeStr)])
 
 	if cmd.PreRun != nil {
 		err = cmd.PreRun(req)
 		if err != nil {
-			return nil, err
+			log.Debug("callCommands returns ", err)
+			return err
 		}
 	}
 
+	if cmd.PostRun != nil && cmd.PostRun[cmds.CLI] != nil {
+		log.Debug("preparing PostRun")
+		re = cmd.PostRun[cmds.CLI](req, re)
+	}
+
 	if client != nil && !cmd.External {
-		log.Debug("executing command via API")
-		res, err = client.Send(req)
+		log.Warning("executing command via API")
+		res, err := client.Send(req)
+		log.Debug("client.Send returned", res, err)
 		if err != nil {
 			if isConnRefused(err) {
 				err = repo.ErrApiNotRunning
 			}
-			return nil, wrapContextCanceled(err)
+			err = wrapContextCanceled(err)
+			log.Debug("callCommands returns ", err)
+			return err
 		}
 
+		go func() {
+			err = cmds.Copy(re, res)
+			log.Debug("api response copied to re, err=", err)
+			if err != nil {
+				log.Debug("callCommands returns ", err)
+				//return err
+			}
+		}()
 	} else {
 		log.Debug("executing command locally")
 
 		err := req.SetRootContext(ctx)
 		if err != nil {
-			return nil, err
+			log.Debug("callCommands returns ", err)
+			return err
 		}
 
 		// Okay!!!!! NOW we can call the command.
-		res = root.Call(req)
-
+		go func() {
+			err := root.Call(req, re)
+			log.Debug("root.Call returned ", err)
+			if err != nil {
+				log.Info("callCommands returns ", err)
+			}
+		}()
 	}
 
-	if cmd.PostRun != nil {
-		cmd.PostRun(req, res)
+	log.Debug("waiting for errCh ######################################", errCh)
+	err = <-errCh
+	log.Debug("errCh returned $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$", err)
+	log.Debug("callCommands returns ", err)
+
+	// if we don't do this, an err==nil will return false because there is a concrete type
+	if e, ok := err.(*cmdsutil.Error); ok && e == nil {
+		return nil
 	}
 
-	return res, nil
+	return err
+
+	/*
+		if ere, ok := re.(cmds.Header); ok {
+			log.Debugf("calling Head()on re of type %T", re)
+			h := ere.Head()
+
+			log.Debug("final head:", h)
+
+			if err := h.Error(); err != nil {
+				return err
+			}
+		} else {
+			log.Debug("ResponseEmitter can't Head()")
+		}
+	*/
 }
 
 // commandDetails returns a command's details for the command given by |path|
@@ -370,14 +429,15 @@ func commandDetails(path []string, root *cmds.Command) (*cmdDetails, error) {
 	// find the last command in path that has a cmdDetailsMap entry
 	cmd := root
 	for _, cmp := range path {
-		var found bool
-		cmd, found = cmd.Subcommands[cmp]
-		if !found {
+		cmd = cmd.Subcommand(cmp)
+		if cmd == nil {
 			return nil, fmt.Errorf("subcommand %s should be in root", cmp)
 		}
 
-		if cmdDetails, found := cmdDetailsMap[cmd]; found {
+		if cmdDetails, found := cmdDetailsMap[strings.Join(path, "/")]; found {
 			details = cmdDetails
+		} else {
+			log.Debug("no details found for", path)
 		}
 	}
 	return &details, nil
@@ -389,7 +449,7 @@ func commandDetails(path []string, root *cmds.Command) (*cmdDetails, error) {
 // It returns a client if the command should be executed on a daemon and nil if
 // it should be executed on a client. It returns an error if the command must
 // NOT be executed on either.
-func commandShouldRunOnDaemon(details cmdDetails, req cmds.Request, root *cmds.Command) (cmdsHttp.Client, error) {
+func commandShouldRunOnDaemon(details cmdDetails, req cmds.Request, root *cmds.Command) (http.Client, error) {
 	path := req.Path()
 	// root command.
 	if len(path) < 1 {
@@ -453,10 +513,10 @@ func isClientError(err error) bool {
 
 	// cast to cmds.Error
 	switch e := err.(type) {
-	case *cmds.Error:
-		return e.Code == cmds.ErrClient
-	case cmds.Error:
-		return e.Code == cmds.ErrClient
+	case *cmdsutil.Error:
+		return e.Code == cmdsutil.ErrClient
+	case cmdsutil.Error:
+		return e.Code == cmdsutil.ErrClient
 	}
 	return false
 }
@@ -604,7 +664,7 @@ var checkIPFSWinFmt = "Otherwise check:\n\ttasklist | findstr ipfs"
 // getApiClient checks the repo, and the given options, checking for
 // a running API service. if there is one, it returns a client.
 // otherwise, it returns errApiNotRunning, or another error.
-func getApiClient(repoPath, apiAddrStr string) (cmdsHttp.Client, error) {
+func getApiClient(repoPath, apiAddrStr string) (http.Client, error) {
 	var apiErrorFmt string
 	switch {
 	case osh.IsUnix():
@@ -641,13 +701,13 @@ func getApiClient(repoPath, apiAddrStr string) (cmdsHttp.Client, error) {
 	return apiClientForAddr(addr)
 }
 
-func apiClientForAddr(addr ma.Multiaddr) (cmdsHttp.Client, error) {
+func apiClientForAddr(addr ma.Multiaddr) (http.Client, error) {
 	_, host, err := manet.DialArgs(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	return cmdsHttp.NewClient(host), nil
+	return http.NewClient(host), nil
 }
 
 func isConnRefused(err error) bool {
