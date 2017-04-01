@@ -94,6 +94,8 @@ var addPinCmd = &cmds.Command{
 			}
 			ch <- added
 		}()
+
+		// we will send an arbitrary number of progress AddPinOutputs and one data AddPinOutput
 		out := make(chan interface{})
 		res.SetOutput((<-chan interface{})(out))
 		go func() {
@@ -101,20 +103,28 @@ var addPinCmd = &cmds.Command{
 			defer ticker.Stop()
 			defer close(out)
 			for {
+				log.Debugf("for head. waiting for select")
 				select {
 				case val, ok := <-ch:
+					log.Debugf("read from ch: %v %v; v=%#v", val, ok, v)
 					if !ok {
 						// error already set just return
 						return
 					}
 					if pv := v.Value(); pv != 0 {
+						log.Debug("sending progress AddPinOutput...")
 						out <- &AddPinOutput{Progress: v.Value()}
+						log.Debug("sending progress AddPinOutput...done")
 					}
+
+					log.Debug("sending progress AddPinOutput...done")
 					out <- &AddPinOutput{Pins: cidsToStrings(val)}
 					return
 				case <-ticker.C:
+					log.Debugf("ticker. v.Value: %s", v.Value())
 					out <- &AddPinOutput{Progress: v.Value()}
 				case <-ctx.Done():
+					log.Debugf("ctx.Done, err=", ctx.Err())
 					res.SetError(ctx.Err(), cmdsutil.ErrNormal)
 					return
 				}
@@ -123,49 +133,38 @@ var addPinCmd = &cmds.Command{
 	},
 	Marshalers: cmds.MarshalerMap{
 		cmds.Text: func(res cmds.Response) (io.Reader, error) {
-			v := unwrapOutput(res.Output())
+			showProgress, _, _ := res.Request().Option("progress").Bool()
+			v := unwrapOutput(res.Output()).(*AddPinOutput)
 
-			var added []string
-
-			switch out := v.(type) {
-			case *AddPinOutput:
-				added = out.Pins
-			case <-chan interface{}:
-				progressLine := false
-				for r0 := range out {
-					r := r0.(*AddPinOutput)
-					if r.Pins != nil {
-						added = r.Pins
-					} else {
-						if progressLine {
-							fmt.Fprintf(res.Stderr(), "\r")
-						}
-						fmt.Fprintf(res.Stderr(), "Fetched/Processed %d nodes", r.Progress)
-						progressLine = true
-					}
-				}
-				if progressLine {
-					fmt.Fprintf(res.Stderr(), "\n")
-				}
-				if res.Error() != nil {
-					return nil, res.Error()
-				}
-			default:
-				return nil, u.ErrCast()
+			if res.Error() != nil {
+				return nil, res.Error()
 			}
-			var pintype string
-			rec, found, _ := res.Request().Option("recursive").Bool()
-			if rec || !found {
-				pintype = "recursively"
+
+			if v.Pins == nil {
+				if !showProgress {
+					// this shouldn't happen!
+					return nil, fmt.Errorf("unexpected nil pins")
+				}
+
+				fmt.Fprintf(res.Stderr(), "Fetched/Processed %d nodes    \r", v.Progress)
+				return nil, nil
 			} else {
-				pintype = "directly"
-			}
+				added := v.Pins
 
-			buf := new(bytes.Buffer)
-			for _, k := range added {
-				fmt.Fprintf(buf, "pinned %s %s\n", k, pintype)
+				var pintype string
+				rec, found, _ := res.Request().Option("recursive").Bool()
+				if rec || !found {
+					pintype = "recursively"
+				} else {
+					pintype = "directly"
+				}
+
+				buf := new(bytes.Buffer)
+				for _, k := range added {
+					fmt.Fprintf(buf, "pinned %s %s\n", k, pintype)
+				}
+				return buf, nil
 			}
-			return buf, nil
 		},
 	},
 }
