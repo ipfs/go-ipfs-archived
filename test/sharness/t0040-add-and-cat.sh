@@ -464,6 +464,17 @@ test_expect_success "ipfs add --cid-version=9 fails" '
 	grep -q "unknown CID version" add_out
 '
 
+test_expect_success EXPENSIVE "create a large directory with lots of files and permission problems" '
+	random-files -seed 1 -depth 2 -dirs 5 -files 100 -filesize 4096 large-dir-perm-prob &&
+	chmod -r large-dir-perm-prob/z476raw
+'
+
+test_expect_failure EXPENSIVE "ipfs add -r should fail with 'permission denied'" '
+	test_must_fail ipfs add -r large-dir-perm-prob 2> large-dir-perm-prob.err &&
+	cat large-dir-perm-prob.err &&
+	grep -q "permission denied" large-dir-perm-prob.err
+'
+
 test_kill_ipfs_daemon
 
 # should work offline

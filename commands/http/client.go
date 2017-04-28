@@ -49,6 +49,7 @@ func (c *client) Send(req cmds.Request) (cmds.Response, error) {
 	if req.Context() == nil {
 		log.Warningf("no context set in request")
 		if err := req.SetRootContext(context.TODO()); err != nil {
+			println("<err 3.0> " + err.Error())
 			return nil, err
 		}
 	}
@@ -56,6 +57,7 @@ func (c *client) Send(req cmds.Request) (cmds.Response, error) {
 	// save user-provided encoding
 	previousUserProvidedEncoding, found, err := req.Option(cmds.EncShort).String()
 	if err != nil {
+		println("<err 3.0> " + err.Error())
 		return nil, err
 	}
 
@@ -67,6 +69,7 @@ func (c *client) Send(req cmds.Request) (cmds.Response, error) {
 
 	query, err := getQuery(req)
 	if err != nil {
+		println("<err 3.0> " + err.Error())
 		return nil, err
 	}
 
@@ -83,6 +86,7 @@ func (c *client) Send(req cmds.Request) (cmds.Response, error) {
 
 	httpReq, err := http.NewRequest("POST", url, reader)
 	if err != nil {
+		println("<err 3.1> " + err.Error())
 		return nil, err
 	}
 
@@ -99,12 +103,14 @@ func (c *client) Send(req cmds.Request) (cmds.Response, error) {
 
 	httpRes, err := c.httpClient.Do(httpReq)
 	if err != nil {
+		println("<err 3.2> " + err.Error())
 		return nil, err
 	}
 
 	// using the overridden JSON encoding in request
 	res, err := getResponse(httpRes, req)
 	if err != nil {
+		println("<err 3.3> " + err.Error())
 		return nil, err
 	}
 

@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/textproto"
 	"net/url"
+	"runtime/debug"
 	"sync"
 
 	files "github.com/ipfs/go-ipfs/commands/files"
@@ -67,6 +68,8 @@ func (mfr *MultiFileReader) Read(buf []byte) (written int, err error) {
 				mfr.files = mfr.files[:len(mfr.files)-1]
 				continue
 			} else if err != nil {
+				println("err<1.1>: " + err.Error())
+				debug.PrintStack()
 				return 0, err
 			}
 

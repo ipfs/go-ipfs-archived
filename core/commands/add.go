@@ -259,9 +259,11 @@ You can now refer to the added file in a gateway, like so:
 					// Finished the list of files.
 					break
 				} else if err != nil {
+					println("err<0.1>: " + err.Error())
 					return err
 				}
 				if err := fileAdder.AddFile(file); err != nil {
+					println("err<0.2>: " + err.Error())
 					return err
 				}
 			}
@@ -282,6 +284,7 @@ You can now refer to the added file in a gateway, like so:
 		go func() {
 			defer close(outChan)
 			if err := addAllAndPin(req.Files()); err != nil {
+				println("crap: " + err.Error())
 				res.SetError(err, cmds.ErrNormal)
 				return
 			}
