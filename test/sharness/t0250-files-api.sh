@@ -419,6 +419,21 @@ test_files_api() {
 		ipfs files flush /
 	'
 
+	test_expect_success "create a raw node, add to mfs" '
+		HASH=$(echo "foobar" | ipfs add -q --raw-leaves) &&
+		ipfs files cp "/ipfs/$HASH" /rawnode
+	'
+
+	test_expect_success "looks correct" '
+		ipfs files read /rawnode > rawnode_read_out &&
+		echo "foobar" > rawnode_read_exp &&
+		test_cmp rawnode_read_exp rawnode_read_out
+	'
+
+	test_expect_success "cleanup" '
+		ipfs files rm /rawnode
+	'
+
 	# test mv
 	test_expect_success "can mv dir" '
 		ipfs files mv /cats/this/is /cats/
