@@ -93,13 +93,14 @@ type Engine struct {
 
 func NewEngine(ctx context.Context, bs bstore.Blockstore) *Engine {
 	e := &Engine{
-		ledgerMap:        make(map[peer.ID]*ledger),
-		bs:               bs,
-		peerRequestQueue: newPRQ(),
-		outbox:           make(chan (<-chan *Envelope), outboxChanBuffer),
-		workSignal:       make(chan struct{}, 1),
-		ticker:           time.NewTicker(time.Millisecond * 100),
+		ledgerMap: make(map[peer.ID]*ledger),
+		bs:        bs,
+		//peerRequestQueue: newPRQ(),
+		outbox:     make(chan (<-chan *Envelope), outboxChanBuffer),
+		workSignal: make(chan struct{}, 1),
+		ticker:     time.NewTicker(time.Millisecond * 100),
 	}
+	e.peerRequestQueue = newStrategyPRQ(e, DefaultStrategy)
 	go e.taskWorker(ctx)
 	return e
 }
@@ -236,12 +237,18 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 		if entry.Cancel {
 			log.Debugf("%s cancel %s", p, entry.Cid)
 			l.CancelWant(entry.Cid)
+			// need to unlock ledger so strategy can analyze it
+			l.lk.Unlock()
 			e.peerRequestQueue.Remove(entry.Cid, p)
+			l.lk.Lock()
 		} else {
 			log.Debugf("wants %s - %d", entry.Cid, entry.Priority)
 			l.Wants(entry.Cid, entry.Priority)
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
+				// need to unlock ledger so strategy can analyze it
+				l.lk.Unlock()
 				e.peerRequestQueue.Push(entry.Entry, p)
+				l.lk.Lock()
 				newWorkExists = true
 			}
 		}
@@ -260,7 +267,10 @@ func (e *Engine) addBlock(block blocks.Block) {
 	for _, l := range e.ledgerMap {
 		l.lk.Lock()
 		if entry, ok := l.WantListContains(block.Cid()); ok {
+			// need to unlock ledger so strategy can analyze it
+			l.lk.Unlock()
 			e.peerRequestQueue.Push(entry, l.Partner)
+			l.lk.Lock()
 			work = true
 		}
 		l.lk.Unlock()
@@ -272,6 +282,7 @@ func (e *Engine) addBlock(block blocks.Block) {
 }
 
 func (e *Engine) AddBlock(block blocks.Block) {
+
 	e.lock.Lock()
 	defer e.lock.Unlock()
 
@@ -286,13 +297,17 @@ func (e *Engine) AddBlock(block blocks.Block) {
 
 func (e *Engine) MessageSent(p peer.ID, m bsmsg.BitSwapMessage) error {
 	l := e.findOrCreate(p)
+
 	l.lk.Lock()
 	defer l.lk.Unlock()
 
 	for _, block := range m.Blocks() {
 		l.SentBytes(len(block.RawData()))
 		l.wantList.Remove(block.Cid())
+		// need to unlock ledger so strategy can analyze it
+		l.lk.Unlock()
 		e.peerRequestQueue.Remove(block.Cid(), p)
+		l.lk.Lock()
 	}
 
 	return nil

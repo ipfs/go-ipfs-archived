@@ -51,7 +51,7 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
 	defer tl.lock.Unlock()
 	partner, ok := tl.partners[to]
 	if !ok {
-		partner = newActivePartner()
+		partner = newActivePartner(to)
 		tl.pQueue.Push(partner)
 		tl.partners[to] = partner
 	}
@@ -220,7 +220,7 @@ func wrapCmp(f func(a, b *peerRequestTask) bool) func(a, b pq.Elem) bool {
 }
 
 type activePartner struct {
-
+	id peer.ID
 	// Active is the number of blocks this peer is currently being sent
 	// active must be locked around as it will be updated externally
 	activelk sync.Mutex
@@ -242,8 +242,9 @@ type activePartner struct {
 	taskQueue pq.PQ
 }
 
-func newActivePartner() *activePartner {
+func newActivePartner(p peer.ID) *activePartner {
 	return &activePartner{
+		id:           p,
 		taskQueue:    pq.New(wrapCmp(V1)),
 		activeBlocks: cid.NewSet(),
 	}
