@@ -10,6 +10,7 @@ import (
 	bstore "github.com/ipfs/go-ipfs/blocks/blockstore"
 	bsmsg "github.com/ipfs/go-ipfs/exchange/bitswap/message"
 	wl "github.com/ipfs/go-ipfs/exchange/bitswap/wantlist"
+
 	logging "gx/ipfs/QmSpJByNKFX1sCsHBEp3R73FL4NF6FnQTEGyNAXHm2GS52/go-log"
 	peer "gx/ipfs/QmdS9KpbDyPrieswibZhkod1oXqRwZJrUPzxCofAMWpFGq/go-libp2p-peer"
 )
@@ -93,14 +94,13 @@ type Engine struct {
 
 func NewEngine(ctx context.Context, bs bstore.Blockstore) *Engine {
 	e := &Engine{
-		ledgerMap: make(map[peer.ID]*ledger),
-		bs:        bs,
-		//peerRequestQueue: newPRQ(),
-		outbox:     make(chan (<-chan *Envelope), outboxChanBuffer),
-		workSignal: make(chan struct{}, 1),
-		ticker:     time.NewTicker(time.Millisecond * 100),
+		ledgerMap:        make(map[peer.ID]*ledger),
+		bs:               bs,
+		peerRequestQueue: newStrategyPRQ(DefaultStrategy),
+		outbox:           make(chan (<-chan *Envelope), outboxChanBuffer),
+		workSignal:       make(chan struct{}, 1),
+		ticker:           time.NewTicker(time.Millisecond * 100),
 	}
-	e.peerRequestQueue = newStrategyPRQ(e, DefaultStrategy)
 	go e.taskWorker(ctx)
 	return e
 }
@@ -247,7 +247,7 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
 				// need to unlock ledger so strategy can analyze it
 				l.lk.Unlock()
-				e.peerRequestQueue.Push(entry.Entry, p)
+				e.peerRequestQueue.Push(entry.Entry, l)
 				l.lk.Lock()
 				newWorkExists = true
 			}
@@ -269,7 +269,7 @@ func (e *Engine) addBlock(block blocks.Block) {
 		if entry, ok := l.WantListContains(block.Cid()); ok {
 			// need to unlock ledger so strategy can analyze it
 			l.lk.Unlock()
-			e.peerRequestQueue.Push(entry, l.Partner)
+			e.peerRequestQueue.Push(entry, l)
 			l.lk.Lock()
 			work = true
 		}

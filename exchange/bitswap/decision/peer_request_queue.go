@@ -14,7 +14,7 @@ import (
 type peerRequestQueue interface {
 	// Pop returns the next peerRequestTask. Returns nil if the peerRequestQueue is empty.
 	Pop() *peerRequestTask
-	Push(entry *wantlist.Entry, to peer.ID)
+	Push(entry *wantlist.Entry, l *ledger)
 	Remove(k *cid.Cid, p peer.ID)
 
 	// NB: cannot expose simply expose taskQueue.Len because trashed elements
@@ -45,13 +45,24 @@ type prq struct {
 	frozen map[peer.ID]*activePartner
 }
 
+func newActivePartner(l *ledger) *activePartner {
+	return &activePartner{
+		id:           l.Partner,
+		taskQueue:    pq.New(wrapCmp(V1)),
+		activeBlocks: cid.NewSet(),
+		ledger:       l,
+	}
+}
+
 // Push currently adds a new peerRequestTask to the end of the list
-func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
+func (tl *prq) Push(entry *wantlist.Entry, l *ledger) {
+	to := l.Partner
+
 	tl.lock.Lock()
 	defer tl.lock.Unlock()
 	partner, ok := tl.partners[to]
 	if !ok {
-		partner = newActivePartner(to)
+		partner = newActivePartner(l)
 		tl.pQueue.Push(partner)
 		tl.partners[to] = partner
 	}
@@ -228,6 +239,8 @@ type activePartner struct {
 
 	activeBlocks *cid.Set
 
+	ledger *ledger
+
 	// requests is the number of blocks this peer is currently requesting
 	// request need not be locked around as it will only be modified under
 	// the peerRequestQueue's locks
@@ -240,14 +253,6 @@ type activePartner struct {
 
 	// priority queue of tasks belonging to this peer
 	taskQueue pq.PQ
-}
-
-func newActivePartner(p peer.ID) *activePartner {
-	return &activePartner{
-		id:           p,
-		taskQueue:    pq.New(wrapCmp(V1)),
-		activeBlocks: cid.NewSet(),
-	}
 }
 
 // partnerCompare implements pq.ElemComparator
