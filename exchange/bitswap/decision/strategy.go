@@ -46,6 +46,23 @@ func DefaultStrategy(pa, pb *activePartner) bool {
 	return pa.active < pb.active
 }
 
+func ReciprocationStrategy(pa, pb *activePartner) bool {
+	return ProbSend(pa) > ProbSend(pb)
+}
+
+func ProbSend(p *activePartner) float64 {
+	p.ledger.lk.Lock()
+	defer p.ledger.lk.Unlock()
+	p.activelk.Lock()
+	defer p.activelk.Unlock()
+
+	probSend := p.ledger.Accounting.Value() - 0.1*float64(p.active)
+	if probSend <= 0 {
+		return 0
+	}
+	return probSend
+}
+
 // getPartnerComparator takes in a Strategy function and returns an
 // implementation of pq.ElemComparator. This is an Engine function due to the
 // required access to peers' ledgers when those peers are compared

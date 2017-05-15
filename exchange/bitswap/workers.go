@@ -52,6 +52,7 @@ func (bs *Bitswap) taskWorker(ctx context.Context, id int) {
 	defer log.Info("bitswap task worker shutting down...")
 	for {
 		log.Event(ctx, "Bitswap.TaskWorker.Loop", idmap)
+		// TODO: hanging here
 		select {
 		case nextEnvelope := <-bs.engine.Outbox():
 			select {
