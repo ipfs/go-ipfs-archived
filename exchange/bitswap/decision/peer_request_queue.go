@@ -1,6 +1,7 @@
 package decision
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -21,13 +22,20 @@ type peerRequestQueue interface {
 	// may exist. These trashed elements should not contribute to the count.
 }
 
-func newPRQ() *prq {
-	return &prq{
+func newPRQ(ctx context.Context) *prq {
+	q := &prq{
 		taskMap:  make(map[string]*peerRequestTask),
 		partners: make(map[peer.ID]*activePartner),
 		frozen:   make(map[peer.ID]*activePartner),
 		pQueue:   pq.New(partnerCompare),
+		pushCh:   make(chan pushOp),
+		popCh:    make(chan chan *peerRequestTask),
+		taskDone: make(chan taskDoneOp),
+		rmCh:     make(chan removeOp),
+		thawCh:   make(chan chan struct{}),
 	}
+	go q.run(ctx)
+	return q
 }
 
 // verify interface implementation
@@ -37,18 +45,63 @@ var _ peerRequestQueue = &prq{}
 // to help decide how to sort tasks (on add) and how to select
 // tasks (on getnext). For now, we are assuming a dumb/nice strategy.
 type prq struct {
-	lock     sync.Mutex
 	pQueue   pq.PQ
 	taskMap  map[string]*peerRequestTask
 	partners map[peer.ID]*activePartner
 
 	frozen map[peer.ID]*activePartner
+
+	pushCh   chan pushOp
+	popCh    chan chan *peerRequestTask
+	taskDone chan taskDoneOp
+	rmCh     chan removeOp
+	thawCh   chan chan struct{}
+}
+
+func (q *prq) run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case push := <-q.pushCh:
+			q.push(push)
+			close(push.done)
+		case pop := <-q.popCh:
+			v := q.pop()
+			pop <- v // send response back on the request channel
+		case rm := <-q.rmCh:
+			q.remove(rm)
+		case w := <-q.thawCh:
+			q.doThawRound()
+			w <- struct{}{}
+		case d := <-q.taskDone:
+			d.partner.TaskDone(d.cid)
+			q.pQueue.Update(d.partner.Index())
+		}
+	}
+}
+
+type pushOp struct {
+	entry *wantlist.Entry
+	to    peer.ID
+	done  chan struct{}
 }
 
 // Push currently adds a new peerRequestTask to the end of the list
 func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
-	tl.lock.Lock()
-	defer tl.lock.Unlock()
+	wait := make(chan struct{})
+	tl.pushCh <- pushOp{entry: entry, to: to, done: wait}
+	<-wait
+}
+
+type taskDoneOp struct {
+	partner *activePartner
+	cid     *cid.Cid
+}
+
+func (tl *prq) push(popt pushOp) {
+	to := popt.to
+	entry := popt.entry
 	partner, ok := tl.partners[to]
 	if !ok {
 		partner = newActivePartner()
@@ -73,10 +126,7 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
 		Target:  to,
 		created: time.Now(),
 		Done: func() {
-			tl.lock.Lock()
-			partner.TaskDone(entry.Cid)
-			tl.pQueue.Update(partner.Index())
-			tl.lock.Unlock()
+			tl.taskDone <- taskDoneOp{partner: partner, cid: entry.Cid}
 		},
 	}
 
@@ -88,8 +138,12 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
 
 // Pop 'pops' the next task to be performed. Returns nil if no task exists.
 func (tl *prq) Pop() *peerRequestTask {
-	tl.lock.Lock()
-	defer tl.lock.Unlock()
+	out := make(chan *peerRequestTask)
+	tl.popCh <- out
+	return <-out
+}
+
+func (tl *prq) pop() *peerRequestTask {
 	if tl.pQueue.Len() == 0 {
 		return nil
 	}
@@ -113,10 +167,18 @@ func (tl *prq) Pop() *peerRequestTask {
 	return out
 }
 
+type removeOp struct {
+	cid *cid.Cid
+	p   peer.ID
+}
+
 // Remove removes a task from the queue
 func (tl *prq) Remove(k *cid.Cid, p peer.ID) {
-	tl.lock.Lock()
-	t, ok := tl.taskMap[taskKey(p, k)]
+	tl.rmCh <- removeOp{cid: k, p: p}
+}
+
+func (tl *prq) remove(rm removeOp) {
+	t, ok := tl.taskMap[taskKey(rm.p, rm.cid)]
 	if ok {
 		// remove the task "lazily"
 		// simply mark it as trash, so it'll be dropped when popped off the
@@ -124,7 +186,7 @@ func (tl *prq) Remove(k *cid.Cid, p peer.ID) {
 		t.trash = true
 
 		// having canceled a block, we now account for that in the given partner
-		partner := tl.partners[p]
+		partner := tl.partners[rm.p]
 		partner.requests--
 
 		// we now also 'freeze' that partner. If they sent us a cancel for a
@@ -132,30 +194,35 @@ func (tl *prq) Remove(k *cid.Cid, p peer.ID) {
 		// to make sure we receive any other in-flight cancels before sending
 		// them a block they already potentially have
 		if partner.freezeVal == 0 {
-			tl.frozen[p] = partner
+			tl.frozen[rm.p] = partner
 		}
 
 		partner.freezeVal++
 		tl.pQueue.Update(partner.index)
 	}
-	tl.lock.Unlock()
 }
 
+/*
 func (tl *prq) fullThaw() {
-	tl.lock.Lock()
-	defer tl.lock.Unlock()
+	tl.prq <- true
+}
 
+func (tl *prq) doFullThaw() {
 	for id, partner := range tl.frozen {
 		partner.freezeVal = 0
 		delete(tl.frozen, id)
 		tl.pQueue.Update(partner.index)
 	}
 }
+*/
 
 func (tl *prq) thawRound() {
-	tl.lock.Lock()
-	defer tl.lock.Unlock()
+	w := make(chan struct{})
+	tl.thawCh <- w
+	<-w // make sure to wait, so that calls to 'pop' after calling thaw get thawed entries
+}
 
+func (tl *prq) doThawRound() {
 	for id, partner := range tl.frozen {
 		partner.freezeVal -= (partner.freezeVal + 1) / 2
 		if partner.freezeVal <= 0 {

@@ -95,7 +95,7 @@ func NewEngine(ctx context.Context, bs bstore.Blockstore) *Engine {
 	e := &Engine{
 		ledgerMap:        make(map[peer.ID]*ledger),
 		bs:               bs,
-		peerRequestQueue: newPRQ(),
+		peerRequestQueue: newPRQ(ctx),
 		outbox:           make(chan (<-chan *Envelope), outboxChanBuffer),
 		workSignal:       make(chan struct{}, 1),
 		ticker:           time.NewTicker(time.Millisecond * 100),

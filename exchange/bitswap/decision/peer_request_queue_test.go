@@ -1,6 +1,7 @@
 package decision
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
@@ -15,7 +16,9 @@ import (
 )
 
 func TestPushPop(t *testing.T) {
-	prq := newPRQ()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	prq := newPRQ(ctx)
 	partner := testutil.RandPeerIDFatal(t)
 	alphabet := strings.Split("abcdefghijklmnopqrstuvwxyz", "")
 	vowels := strings.Split("aeiou", "")
@@ -52,7 +55,9 @@ func TestPushPop(t *testing.T) {
 		prq.Remove(c, partner)
 	}
 
-	prq.fullThaw()
+	for i := 0; i < 100; i++ {
+		prq.thawRound() // thaw it out
+	}
 
 	var out []string
 	for {
@@ -75,7 +80,9 @@ func TestPushPop(t *testing.T) {
 
 // This test checks that peers wont starve out other peers
 func TestPeerRepeats(t *testing.T) {
-	prq := newPRQ()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	prq := newPRQ(ctx)
 	a := testutil.RandPeerIDFatal(t)
 	b := testutil.RandPeerIDFatal(t)
 	c := testutil.RandPeerIDFatal(t)

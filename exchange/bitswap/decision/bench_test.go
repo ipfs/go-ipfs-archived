@@ -1,6 +1,7 @@
 package decision
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"testing"
@@ -15,7 +16,9 @@ import (
 // FWIW: At the time of this commit, including a timestamp in task increases
 // time cost of Push by 3%.
 func BenchmarkTaskQueuePush(b *testing.B) {
-	q := newPRQ()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	q := newPRQ(ctx)
 	peers := []peer.ID{
 		testutil.RandPeerIDFatal(b),
 		testutil.RandPeerIDFatal(b),
